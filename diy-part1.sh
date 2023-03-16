@@ -19,12 +19,5 @@ echo 'src-git kenzo https://github.com/kenzok8/openwrt-packages' >>feeds.conf.de
 # echo 'src-git adguardhome https://github.com/AdguardTeam/AdGuardHome' >>feeds.conf.default
 # echo 'src-git openclash https://github.com/vernesong/OpenClash' >>feeds.conf.default
 
-rm -rf package/passwall
-git clone https://github.com/xiaorouji/openwrt-passwall package/passwall
-rm -rf package/openclash
-git clone https://github.com/vernesong/OpenClash.git package/openclash
-rm -rf package/AdguardHome
-git clone https://github.com/AdguardTeam/AdguardHome package/AdguardHome
-
 # 添加插件源码
 # sed -i '$a src-git-full kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
