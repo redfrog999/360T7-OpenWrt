@@ -10,7 +10,7 @@ on:
         description: 'SSH connection to Actions'
 
 env:
-  REPO_URL: https://github.com/redfrog/immortalwrt-mt798x
+  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
   REPO_BRANCH: openwrt-21.02
   DEVICE_NAME: 7981-360-t7
   FEEDS_CONF:  feeds.conf.default
