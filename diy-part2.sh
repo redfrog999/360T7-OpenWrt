@@ -22,5 +22,10 @@ sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generat
 rm -rf lua-maxminddb
 git clone https://github.com/jerrykuku/lua-maxminddb.
 
-rm -rf luci-app-AdGuardHome
+rm -rf luci-app-adguardhome
 git clone https://github.com/AdguardTeam/AdGuardHome
+
+# remove v2ray-geodata package from feeds (openwrt-22.03 & master)
+rm -rf feeds/packages/net/v2ray-geodata
+git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
+git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
