@@ -22,5 +22,5 @@ sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generat
 rm -rf lua-maxminddb
 git clone https://github.com/jerrykuku/lua-maxminddb.
 
-rm -rf luci-app-vssr
-git clone https://github.com/jerrykuku/luci-app-vssr.git
+rm -rf luci-app-AdGuardHome
+git clone https://github.com/AdguardTeam/AdGuardHome
