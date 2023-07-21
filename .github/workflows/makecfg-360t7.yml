@@ -15,7 +15,7 @@ env:
   DEVICE_NAME: Qihoo 360T7
   FILES: MT7981/files
   FEEDS_CONF: MT7981/feeds.conf.default
-  CONFIG_FILE: MT7981/.config.360T7-ssrp-psw
+  CONFIG_FILE: MT7981/.config-360T7-lede.hnat
   DIY_P1_SH: MT7981/diy-part1.sh
   DIY_P2_SH: MT7981/diy-part2.sh
   TZ: Asia/Shanghai
