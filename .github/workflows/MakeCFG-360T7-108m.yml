@@ -14,12 +14,12 @@ env:
   #REPO_URL: https://github.com/redfrog999/immortalwrt
   REPO_BRANCH: master
   #REPO_BRANCH: main
-  DEVICE_NAME: Ramips-Hnat
-  FILES: /files
-  FEEDS_CONF: /feeds.conf.default.bak
-  CONFIG_FILE: /.config.360t7-ssrp-psw
-  DIY_P1_SH: hnat/diy-part1.sh
-  DIY_P2_SH: hnat/diy-part2.sh
+  DEVICE_NAME: 360T7-108m
+  #FILES: /files
+  FEEDS_CONF: feeds.conf.default.bak
+  CONFIG_FILE:.config.360t7-ssrp-psw
+  DIY_P1_SH: diy-part1.sh
+  DIY_P2_SH: diy-part2.sh
   TZ: Asia/Shanghai
 
 jobs:
