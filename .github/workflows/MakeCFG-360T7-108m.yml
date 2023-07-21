@@ -16,9 +16,7 @@ env:
   #REPO_BRANCH: main
   DEVICE_NAME: Ramips-Hnat
   FILES: /files
-  FEEDS_CONF: ramips-hnat/feeds.conf.default.bak
-  #CONFIG_FILE: ramips-hnat/.config.EA7500v2-lede-OPD.hnat
-  #CONFIG_FILE: ramips-hnat/.config.EA7500v2-PSW.hnat
+  FEEDS_CONF: /feeds.conf.default.bak
   CONFIG_FILE: /.config.360t7-ssrp-psw
   DIY_P1_SH: /diy-part1.sh
   DIY_P2_SH: /diy-part2.sh
