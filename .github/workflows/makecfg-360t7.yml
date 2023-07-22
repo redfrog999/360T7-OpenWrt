@@ -10,8 +10,10 @@ on:
         description: 'SSH connection to Actions'
 
 env:
-  REPO_URL: https://github.com/redfrog999/jdc-lede
-  REPO_BRANCH: master
+  #REPO_URL: https://github.com/redfrog999/jdc-lede
+  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
+  REPO_BRANCH: openwrt-21.02
+  #REPO_BRANCH: master
   DEVICE_NAME: Qihoo 360T7
   FILES: MT7981/files
   FEEDS_CONF: MT7981/feeds.conf.default
