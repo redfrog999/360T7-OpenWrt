@@ -20,7 +20,7 @@ on:
         default: 'false'
 
 env:
-  REPO_URL: https://github.com/redfrog999/jdc-lede
+  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
   REPO_BRANCH: master
   FEEDS_CONF: MT7981/feeds.conf.default
   #CONFIG_FILE: MT7981/.config-360T7-lede.hnat
