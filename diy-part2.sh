@@ -19,18 +19,19 @@ sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generat
 # 修改默认wifi密码key为123456789
 # sed -i 's/encryption=none/encryption=sae-mixed/g' package/kernel/mac80211/files/lib/wifi/mac80211.sh
 
-rm -rf lua-maxminddb
-git clone https://github.com/jerrykuku/lua-maxminddb
+# rm -rf lua-maxminddb
+# git clone https://github.com/jerrykuku/lua-maxminddb
 
-rm -rf luci-app-adguardhome
-git clone https://github.com/AdguardTeam/AdGuardHome
+# rm -rf luci-app-adguardhome
+# git clone https://github.com/AdguardTeam/AdGuardHome
 
 # remove v2ray-geodata package from feeds (openwrt-22.03 & master)
 rm -rf feeds/packages/net/v2ray-geodata
-git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
-git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
+git clone https://github.com/sbwml/luci-app-mosdns -b v5 feeds/packages/net/mosdns
+git clone https://github.com/sbwml/v2ray-geodata feeds/packages/net/v2ray-geodata
 
 #安装Alist为最新版
 rm -rf feeds/packages/lang/golang
+rm -rf feeds/packages/net/alist
 git clone https://github.com/sbwml/packages_lang_golang -b 20.x feeds/packages/lang/golang
-git clone https://github.com/sbwml/luci-app-alist package/alist
+git clone https://github.com/sbwml/luci-app-alist feeds/packages/net/alist
