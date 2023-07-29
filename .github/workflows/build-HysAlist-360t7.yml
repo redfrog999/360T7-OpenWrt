@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-108m-lede
+name: 360t7-108m-AlistHys
 
 on:
   repository_dispatch:
