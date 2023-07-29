@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-108m-AlistHys
+name: 360t7-108m-21.02
 
 on:
   repository_dispatch:
@@ -20,11 +20,10 @@ on:
         default: 'false'
 
 env:
-  REPO_URL: https://github.com/hanwckf/immortalwrt-mt79
-  REPO_BRANCH: master
-  FEEDS_CONF: MT7981/feeds.conf.default
-  #CONFIG_FILE: MT7981/.config-360T7-lede.hnat
-  CONFIG_FILE: MT7981/.config.360t7-Alist-Xray-Hys
+  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
+  REPO_BRANCH: openwrt-21.02
+  FEEDS_CONF: feeds.conf.default
+  CONFIG_FILE: .config.360t7-Alist-Xray-Hys
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
   UPLOAD_BIN_DIR: false
