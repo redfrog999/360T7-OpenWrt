@@ -1,7 +1,7 @@
 # Description: 此脚本基于 P3TERX 的 Actions-OpenWrt 仓库修改而来。
 # 用于生成config配置文件
 
-name: MakeCfg-360T7
+name: MakeCfg-798x-All
 
 on:
   workflow_dispatch:
@@ -10,10 +10,10 @@ on:
         description: 'SSH connection to Actions'
 
 env:
-  #REPO_URL: https://github.com/redfrog999/jdc-lede
-  REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x
-  REPO_BRANCH: openwrt-21.02
-  #REPO_BRANCH: master
+  REPO_URL: https://github.com/redfrog999/jdc-lede
+  #REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x
+  #REPO_BRANCH: openwrt-21.02
+  REPO_BRANCH: master
   DEVICE_NAME: Qihoo 360T7
   FILES: files
   FEEDS_CONF: feeds.conf.default
