@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: JCG-Q30-21.02
+name: JCG-Q30.All-21.02
 
 on:
   repository_dispatch:
