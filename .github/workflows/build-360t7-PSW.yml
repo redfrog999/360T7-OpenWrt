@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-rclone-clean
+name: 360t7-OPC-PSW
 
 on:
   repository_dispatch:
