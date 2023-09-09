@@ -19,7 +19,7 @@ env:
   DEVICE_NAME: mt798x
   FILES: files
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config.360t7-RClone-Hys
+  CONFIG_FILE: .config-hanc-makecfg
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
   TZ: Asia/Shanghai
