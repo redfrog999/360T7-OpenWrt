@@ -15,13 +15,13 @@
 
 # Add a feed source
 #echo 'src-git kenzo https://github.com/kenzok8/openwrt-packages' >>feeds.conf.default
-echo "src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main" >> "feeds.conf.default"
+#echo "src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main" >> "feeds.conf.default"
 #echo "src-git passwall https://github.com/xiaorouji/openwrt-passwall.git;main" >> "feeds.conf.default"
-echo "src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main" >> "feeds.conf.default"
+#echo "src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main" >> "feeds.conf.default"
 #echo 'src-git adguardhome https://github.com/AdguardTeam/AdGuardHome' >>feeds.conf.default
-#echo 'src-git mosdns https://github.com/sbwml/luci-app-mosdns' >>feeds.conf.default
+echo 'src-git mosdns https://github.com/sbwml/luci-app-mosdns' >>feeds.conf.default
 #echo 'src-git alist https://github.com/sbwml/luci-app-alist' >>feeds.conf.default
 
 # 添加插件源码
 #sed -i '$a src-git-full kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
-#sed -i '$a src-git-full small https://github.com/kenzok8/small' feeds.conf.default
+sed -i '$a src-git-full small https://github.com/kenzok8/small' feeds.conf.default
