@@ -21,5 +21,5 @@ echo "src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main"
 #echo 'src-git mosdns https://github.com/sbwml/luci-app-mosdns' >>feeds.conf.default
 
 # 添加插件源码
-#sed -i '$a src-git-full kenzo https://github.com/RavenCage/kenzok8-openwrt-packages' feeds.conf.default
+sed -i '$a src-git-full kenzo https://github.com/RavenCage/kenzok8-openwrt-packages' feeds.conf.default
 #sed -i '$a src-git-full small https://github.com/kenzok8/small' feeds.conf.default
