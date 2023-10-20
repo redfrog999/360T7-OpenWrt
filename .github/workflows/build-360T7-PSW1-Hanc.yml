@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360T7 PSW1 Hanwckf 0717
+name: 360T7 PSW Hanwckf 0717
 
 on:
   repository_dispatch:
