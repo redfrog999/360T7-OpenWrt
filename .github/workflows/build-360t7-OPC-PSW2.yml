@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-OPC-PSW2
+name: 360t7-OPC-PSW2-Hanwckf
 
 on:
   repository_dispatch:
@@ -20,9 +20,7 @@ on:
         default: 'false'
 
 env:
-  #REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x-rax3000m-emmc
-  #REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x-rax3000m-emmc
-  REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x-360T7
+  REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x
   REPO_BRANCH: openwrt-21.02
   #REPO_BRANCH: openwrt-23.05
   FEEDS_CONF: feeds.conf.default
