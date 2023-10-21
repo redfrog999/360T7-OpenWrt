@@ -72,8 +72,10 @@ CONFIG_TARGET_mediatek_mt7981_DEVICE_mt7981-360-t7-108M=y
 # CONFIG_TARGET_mediatek_mt7981_DEVICE_glinet_gl-mt2500 is not set
 # CONFIG_TARGET_mediatek_mt7981_DEVICE_jcg_q30 is not set
 # CONFIG_TARGET_mediatek_mt7981_DEVICE_livinet_zr-3020 is not set
-# CONFIG_TARGET_mediatek_mt7981_DEVICE_cmcc_rax3000m is not set
-# CONFIG_TARGET_mediatek_mt7981_DEVICE_cmcc_rax3000m_emmc is not set
+# CONFIG_TARGET_DEVICE_mediatek_mt7981_DEVICE_cmcc_rax3000m is not set
+# CONFIG_TARGET_DEVICE_PACKAGES_mediatek_mt7981_DEVICE_cmcc_rax3000m=""
+# CONFIG_TARGET_DEVICE_mediatek_mt7981_DEVICE_cmcc_rax3000m-emmc is not set
+# CONFIG_TARGET_DEVICE_PACKAGES_mediatek_mt7981_DEVICE_cmcc_rax3000m-emmc=""
 # CONFIG_TARGET_mediatek_mt7981_DEVICE_h3c_nx30pro is not set
 # CONFIG_TARGET_mediatek_mt7981_DEVICE_konka_komi-a31 is not set
 # CONFIG_TARGET_mediatek_mt7981_DEVICE_imou_lc-hx3001 is not set
