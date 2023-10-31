@@ -20,8 +20,8 @@ on:
         default: 'false'
 
 env:
-  REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x
-  #REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
+  #REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x
+  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
   REPO_BRANCH: openwrt-21.02
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config.360t7-PSW-OPC
