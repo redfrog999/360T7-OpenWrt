@@ -10,16 +10,17 @@ on:
         description: 'SSH connection to Actions'
 
 env:
-  REPO_URL: https://github.com/redfrog999/Immortalwrt-mt798x
-  #REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x-rax3000m-emmc
+  #REPO_URL: https://github.com/redfrog999/Immortalwrt-mt798x
+  REPO_URL: https://github.com/RavenCage/immortalwrtARM
   #REPO_URL: https://github.com/lgs2007m/immortalwrt-mt798x-rax3000m-emmc
-  REPO_BRANCH: openwrt-21.02
+  REPO_BRANCH: mt7981
   #REPO_BRANCH: master
   #REPO_BRANCH: openwrt-23.05
   DEVICE_NAME: mt798x
   FILES: files
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config.360t7-PSW-OPC
+  CONFIG_FILE: .config.360t7-237.Fix
+  #CONFIG_FILE: .config.360t7-PSW-OPC
   #CONFIG_FILE: .config-hanc-makecfg
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
