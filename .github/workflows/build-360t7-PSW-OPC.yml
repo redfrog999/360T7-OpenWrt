@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-237-AD.Fix
+name: 360t7-237-798x.Test
 
 on:
   repository_dispatch:
@@ -20,8 +20,8 @@ on:
         default: 'false'
 
 env:
-  REPO_URL: https://github.com/RavenCage/immortalwrtARM
-  #REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
+  #REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x
+  REPO_URL: https://github.com/redfrog999000/237-immortalwrt-mt798x
   #REPO_BRANCH: openwrt-21.02
   REPO_BRANCH: mt7981
   FEEDS_CONF: feeds.conf.default
