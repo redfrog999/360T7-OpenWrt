@@ -11,8 +11,8 @@ on:
 
 env:
   #REPO_URL: https://github.com/redfrog999/Immortalwrt-mt798x
-  REPO_URL: https://github.com/RavenCage/immortalwrtARM
-  #REPO_URL: https://github.com/lgs2007m/immortalwrt-mt798x-rax3000m-emmc
+  #REPO_URL: https://github.com/RavenCage/immortalwrtARM
+  REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x
   REPO_BRANCH: mt7981
   #REPO_BRANCH: master
   #REPO_BRANCH: openwrt-23.05
