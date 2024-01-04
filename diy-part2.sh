@@ -19,54 +19,6 @@ if [ -d *"tinyfilemanager"* ]; then
 	echo "tinyfilemanager date has been updated!"
 fi
 
-#预置HomeProxy数据
-if [ -d *"homeproxy"* ]; then
-	HP_PATCH="../homeproxy/root/etc/homeproxy/resources"
-
-	UPDATE_RESOURCES() {
-		local RES_TYPE=$1
-		local RES_REPO=$(echo "$2" | tr '[:upper:]' '[:lower:]')
-		local RES_BRANCH=$3
-		local RES_FILE=$4
-		local RES_EXT=${4##*.}
-		local RES_DEPTH=${5:-1}
-
-		git clone -q --depth=$RES_DEPTH --single-branch --branch $RES_BRANCH "https://github.com/$RES_REPO.git" ./$RES_TYPE/
-
-		cd ./$RES_TYPE/
-
-		if [[ $RES_EXT == "txt" ]]; then
-			echo $(git log -1 --pretty=format:'%s' -- $RES_FILE | grep -o "[0-9]*") > "$RES_TYPE".ver
-			mv -f $RES_FILE "$RES_TYPE"."$RES_EXT"
-		elif [[ $RES_EXT == "zip" ]]; then
-			local REPO_ID=$(echo -n "$RES_REPO" | md5sum | cut -d ' ' -f 1)
-			local REPO_VER=$(git log -1 --pretty=format:'%s' | cut -d ' ' -f 1)
-			echo "{ \"$REPO_ID\": { \"repo\": \"$(echo $RES_REPO | sed 's/\//\\\//g')\", \"version\": \"$REPO_VER\" } }" > "$RES_TYPE".ver
-			curl -sfL -O "https://github.com/$RES_REPO/archive/$RES_FILE"
-			mv -f $RES_FILE $HP_PATCH/"${RES_REPO//\//_}"."$RES_EXT"
-		elif [[ $RES_EXT == "db" ]]; then
-			local RES_VER=$(git tag | tail -n 1)
-			echo $RES_VER > "$RES_TYPE".ver
-			curl -sfL -O "https://github.com/$RES_REPO/releases/download/$RES_VER/$RES_FILE"
-		fi
-
-		cp -f "$RES_TYPE".* $HP_PATCH/
-		chmod +x $HP_PATCH/*
-
-		cd .. && rm -rf ./$RES_TYPE/
-	}
-
-	UPDATE_RESOURCES "china_ip4" "1715173329/IPCIDR-CHINA" "master" "ipv4.txt" "5"
-	UPDATE_RESOURCES "china_ip6" "1715173329/IPCIDR-CHINA" "master" "ipv6.txt" "5"
-	UPDATE_RESOURCES "gfw_list" "Loyalsoldier/v2ray-rules-dat" "release" "gfw.txt"
-	UPDATE_RESOURCES "china_list" "Loyalsoldier/v2ray-rules-dat" "release" "direct-list.txt"
-	#UPDATE_RESOURCES "geoip" "1715173329/sing-geoip" "master" "geoip.db"
-	#UPDATE_RESOURCES "geosite" "1715173329/sing-geosite" "master" "geosite.db"
-	#UPDATE_RESOURCES "clash_dashboard" "MetaCubeX/metacubexd" "gh-pages" "gh-pages.zip"
-
-	echo "homeproxy date has been updated!"
-fi
-
 #预置OpenClash内核和数据
 if [ -d *"OpenClash"* ]; then
 	CORE_VER="https://raw.githubusercontent.com/vernesong/OpenClash/core/dev/core_version"
@@ -98,9 +50,6 @@ if [ -d *"OpenClash"* ]; then
 	chmod +x ./clash* && rm -rf ./*.gz
 
 	echo "openclash date has been updated!"
-
-# 修改默认wifi密码key为123456789
-# sed -i 's/encryption=none/encryption=sae-mixed/g' package/kernel/mac80211/files/lib/wifi/mac80211.sh
 
 # drop mosdns and v2ray-geodata packages that come with the source
 find ./ | grep Makefile | grep v2ray-geodata | xargs rm -f
