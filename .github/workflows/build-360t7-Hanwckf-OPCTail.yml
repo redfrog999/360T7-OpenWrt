@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-OPC-Tail-Hanwckf-cfg
+name: 360t7-Tail+SMD+Mosdns-Hanwckf-cfg
 
 on:
   repository_dispatch:
