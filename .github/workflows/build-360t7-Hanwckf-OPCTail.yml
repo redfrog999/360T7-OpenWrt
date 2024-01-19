@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-Tail+SMD+Mosdns-Hanwckf-cfg
+name: 360t7-234+Tail+SMD+Mosdns-cfg
 
 on:
   repository_dispatch:
@@ -21,7 +21,7 @@ on:
 
 env:
   #REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x
-  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
+  REPO_URL: https://github.com/redfrog999000/237-immortalwrt-mt798x
   REPO_BRANCH: openwrt-21.02
   #REPO_BRANCH: openwrt-23.05
   FEEDS_CONF: feeds.conf.default
@@ -29,6 +29,8 @@ env:
   #CONFIG_FILE: .config-360-immortalwrt
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
+  PACKAGES_SH: Packages.sh
+  HANDLES_SH: Handles.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: false
@@ -70,13 +72,25 @@ jobs:
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
-
+        
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a
+      
+    - name: Custom Packages
+      run: |
+        chmod +x $PACKAGES_SH
+        cd /workdir/openwrt/package/
+        $GITHUB_WORKSPACE/$PACKAGES_SH     
 
+    - name: Custom Handles
+      run: |
+        chmod +x $HANDLES_SH
+        cd /workdir/openwrt/package/
+        $GITHUB_WORKSPACE/$HANDLES_SH 
+      
     - name: Load custom configuration
       run: |
         [ -e files ] && mv files openwrt/files
