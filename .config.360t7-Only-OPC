@@ -6159,6 +6159,8 @@ CONFIG_PACKAGE_luci-i18n-mtwifi-cfg-zh-cn=y
 CONFIG_PACKAGE_luci-i18n-turboacc-mtk-zh-cn=y
 CONFIG_PACKAGE_luci-i18n-tinyfilemanager-zh-cn=y
 # CONFIG_PACKAGE_luci-i18n-tinyfilemanager-zh-tw is not set
+CONFIG_PACKAGE_luci-i18n-nlbwmon-zh-cn=y
+# CONFIG_PACKAGE_luci-i18n-nlbwmon-zh-tw is not set
 # CONFIG_PACKAGE_luci-i18n-upnp-ar is not set
 # CONFIG_PACKAGE_luci-i18n-upnp-bg is not set
 # CONFIG_PACKAGE_luci-i18n-upnp-bn is not set
