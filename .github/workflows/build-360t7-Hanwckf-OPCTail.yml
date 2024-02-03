@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 暂时取消
+name: 360T7-XWrt-PSW.OPC.SMD.Mos
 
 on:
   repository_dispatch:
@@ -20,12 +20,12 @@ on:
         default: 'false'
 
 env:
-  #REPO_URL: https://github.com/RavenCage/immortalwrt-mt798x
-  REPO_URL: https://github.com/redfrog999000/237-immortalwrt-mt798x
-  REPO_BRANCH: openwrt-21.02
-  #REPO_BRANCH: openwrt-23.05
+  REPO_URL: https://github.com/RavenCage/x-wrt
+  #REPO_URL: https://github.com/redfrog999000/237-immortalwrt-mt798x
+  #REPO_BRANCH: openwrt-21.02
+  REPO_BRANCH: master
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config.360t7-Tail.OPC
+  CONFIG_FILE: .config.360t7-xwrt.2305
   #CONFIG_FILE: .config-360-immortalwrt
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
