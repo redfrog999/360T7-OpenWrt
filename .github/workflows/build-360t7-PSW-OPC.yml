@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-237-798x.Test
+name: 暂时取消
 
 on:
   repository_dispatch:
