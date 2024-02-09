@@ -21,7 +21,7 @@ on:
 
 env:
   REPO_URL: https://github.com/RavenCage/Immortalwrt798x-237
-  REPO_URL: https://github.com/redfrog999000/237-immortalwrt-mt798x
+  #REPO_URL: https://github.com/redfrog999000/237-immortalwrt-mt798x
   REPO_BRANCH: main
   #REPO_BRANCH: openwrt-21.02
   FEEDS_CONF: feeds.conf.default
