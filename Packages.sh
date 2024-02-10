@@ -19,6 +19,7 @@ UPDATE_PACKAGE() {
 		mv -f $REPO_NAME $PKG_NAME
 	fi
 }
+
 UPDATE_PACKAGE "tinyfilemanager" "muink/luci-app-tinyfilemanager" "master"
 
 UPDATE_PACKAGE "design" "gngpp/luci-theme-design" "js"
