@@ -20,7 +20,7 @@ on:
         default: 'false'
 
 env:
-  REPO_URL: https://github.com/redfrog999/immortalwrt-798x
+  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
   #REPO_URL: https://github.com/redfrog999000/237-immortalwrt-mt798x
   #REPO_BRANCH: master
   REPO_BRANCH: openwrt-21.02
