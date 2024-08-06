@@ -3206,12 +3206,12 @@ CONFIG_PACKAGE_kmod-ipt-fullconenat=y
 # CONFIG_PACKAGE_kmod-ipt-fuzzy is not set
 # CONFIG_PACKAGE_kmod-ipt-geoip is not set
 # CONFIG_PACKAGE_kmod-ipt-hashlimit=y
-# CONFIG_PACKAGE_kmod-ipt-iface=y
-# CONFIG_PACKAGE_kmod-ipt-ipmark=y
+CONFIG_PACKAGE_kmod-ipt-iface=y
+CONFIG_PACKAGE_kmod-ipt-ipmark=y
 CONFIG_PACKAGE_kmod-ipt-ipopt=y
 # CONFIG_PACKAGE_kmod-ipt-ipp2p is not set
 CONFIG_PACKAGE_kmod-ipt-iprange=y
-# CONFIG_PACKAGE_kmod-ipt-ipsec is not set
+CONFIG_PACKAGE_kmod-ipt-ipsec=y
 CONFIG_PACKAGE_kmod-ipt-ipset=y
 # CONFIG_PACKAGE_kmod-ipt-ipv4options=y
 # CONFIG_PACKAGE_kmod-ipt-led is not set
@@ -3226,7 +3226,7 @@ CONFIG_PACKAGE_kmod-ipt-nat6=y
 # CONFIG_PACKAGE_kmod-ipt-nflog is not set
 # CONFIG_PACKAGE_kmod-ipt-nfqueue is not set
 CONFIG_PACKAGE_kmod-ipt-offload=y
-# CONFIG_PACKAGE_kmod-ipt-physdev is not set
+CONFIG_PACKAGE_kmod-ipt-physdev=y
 # CONFIG_PACKAGE_kmod-ipt-proto=y
 # CONFIG_PACKAGE_kmod-ipt-psd is not set
 # CONFIG_PACKAGE_kmod-ipt-quota2 is not set
@@ -3236,9 +3236,9 @@ CONFIG_PACKAGE_kmod-ipt-raw6=y
 # CONFIG_PACKAGE_kmod-ipt-rtpengine is not set
 # CONFIG_PACKAGE_kmod-ipt-sysrq is not set
 # CONFIG_PACKAGE_kmod-ipt-tarpit is not set
-# CONFIG_PACKAGE_kmod-ipt-tee=y
+CONFIG_PACKAGE_kmod-ipt-tee=y
 CONFIG_PACKAGE_kmod-ipt-tproxy=y
-# CONFIG_PACKAGE_kmod-ipt-u32=y
+CONFIG_PACKAGE_kmod-ipt-u32=y
 # CONFIG_PACKAGE_kmod-netatop is not set
 CONFIG_PACKAGE_kmod-nf-conntrack=y
 CONFIG_PACKAGE_kmod-nf-conntrack-netlink=y
