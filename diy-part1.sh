@@ -17,7 +17,7 @@
 # Add a feed source
 #echo 'src-git messense https://github.com/messense/aliyundrive-webdav' >>feeds.conf.default
 echo "src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main" >> "feeds.conf.default"
-echo "src-git passwall https://github.com/xiaorouji/openwrt-passwall.git;luci-smartdns-dev" >> "feeds.conf.default"
+echo "src-git passwall https://github.com/lwb1978/openwrt-passwall.git;luci-smartdns-dev" >> "feeds.conf.default"
 echo "src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main" >> "feeds.conf.default"
 echo 'src-git mosdns https://github.com/sbwml/luci-app-mosdns' >>feeds.conf.default
 #echo 'src-git alist https://github.com/sbwml/luci-app-alist' >>feeds.conf.default
