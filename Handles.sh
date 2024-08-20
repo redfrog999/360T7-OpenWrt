@@ -75,8 +75,8 @@ if [ -d *"OpenClash"* ]; then
 	cd ./OpenClash/luci-app-openclash/root/etc/openclash/
 
 	curl -sfL -o Country.mmdb $GEO_MMDB
-	curl -sfL -o GeoSite.dat $GEO_SITE
-	curl -sfL -o GeoIP.dat $GEO_IP
+	#curl -sfL -o GeoSite.dat $GEO_SITE
+	#curl -sfL -o GeoIP.dat $GEO_IP
 	curl -sfL -o GeoIP.metadb $GEO_META
 
 	mkdir ./core/ && cd ./core/
