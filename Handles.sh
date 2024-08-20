@@ -68,8 +68,8 @@ if [ -d *"OpenClash"* ]; then
 	#CORE_TUN="https://github.com/vernesong/OpenClash/raw/core/master/premium/clash-linux-$CORE_TYPE-$CORE_TUN_VER.gz"
 
 	GEO_MMDB="https://github.com/alecthw/mmdb_china_ip_list/raw/release/lite/Country.mmdb"
-	GEO_SITE="https://github.com/Loyalsoldier/v2ray-rules-dat/raw/release/geosite.dat"
-	GEO_IP="https://github.com/Loyalsoldier/v2ray-rules-dat/raw/release/geoip.dat"
+	#GEO_SITE="https://github.com/Loyalsoldier/v2ray-rules-dat/raw/release/geosite.dat"
+	#GEO_IP="https://github.com/Loyalsoldier/v2ray-rules-dat/raw/release/geoip.dat"
 	GEO_META="https://github.com/MetaCubeX/meta-rules-dat/raw/release/geoip.metadb"
 
 	cd ./OpenClash/luci-app-openclash/root/etc/openclash/
