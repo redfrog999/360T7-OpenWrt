@@ -20,31 +20,56 @@ UPDATE_PACKAGE() {
 	fi
 }
 
-UPDATE_PACKAGE "tinyfilemanager" "muink/luci-app-tinyfilemanager" "master"
+#UPDATE_PACKAGE "包名" "项目地址" "项目分支" "pkg/name，可选，pkg为从大杂烩中单独提取包名插件；name为重命名为包名"
+UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "js"
+UPDATE_PACKAGE "luci-app-advancedplus" "VIKINGYFY/luci-app-advancedplus" "main"
+UPDATE_PACKAGE "alpha" "derisamedia/luci-theme-alpha" "master"
+UPDATE_PACKAGE "alpha-config" "animegasan/luci-app-alpha-config" "master"
 
+UPDATE_PACKAGE "tinyfilemanager" "muink/luci-app-tinyfilemanager" "master"
+UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
+UPDATE_PACKAGE "mihomo" "morytyann/OpenWrt-mihomo" "main"
 UPDATE_PACKAGE "design" "gngpp/luci-theme-design" "js"
 UPDATE_PACKAGE "design-config" "gngpp/luci-app-design-config" "master"
-UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "js"
+UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
 
-UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev"
+UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
 
 #更新软件包版本
 UPDATE_VERSION() {
 	local PKG_NAME=$1
-	local NEW_VER=$2
-	local NEW_HASH=$3
-	local PKG_FILE=$(find ./feeds/packages/*/$PKG_NAME/ -type f -name "Makefile" 2>/dev/null)
+	local PKG_MARK=${2:-not}
+	local PKG_FILES=$(find ./ ../feeds/packages/ -maxdepth 3 -type f -wholename "*/$PKG_NAME/Makefile")
 
-	if [ -f "$PKG_FILE" ]; then
-		local OLD_VER=$(grep -Po "PKG_VERSION:=\K.*" $PKG_FILE)
-		if dpkg --compare-versions "$OLD_VER" lt "$NEW_VER"; then
-			sed -i "s/PKG_VERSION:=.*/PKG_VERSION:=$NEW_VER/g" $PKG_FILE
-			sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" $PKG_FILE
-			echo "$PKG_NAME ver has updated!"
-		else
-			echo "$PKG_NAME ver is latest!"
-		fi
-	else
+	echo " "
+
+	if [ -z "$PKG_FILES" ]; then
 		echo "$PKG_NAME not found!"
+		return
 	fi
+
+	echo "$PKG_NAME version update has started!"
+
+	for PKG_FILE in $PKG_FILES; do
+		local PKG_REPO=$(grep -Pho 'PKG_SOURCE_URL:=https://.*github.com/\K[^/]+/[^/]+(?=.*)' $PKG_FILE | head -n 1)
+		local PKG_VER=$(curl -sL "https://api.github.com/repos/$PKG_REPO/releases" | jq -r "map(select(.prerelease|$PKG_MARK)) | first | .tag_name")
+		local NEW_VER=$(echo $PKG_VER | sed "s/.*v//g; s/_/./g")
+		local NEW_HASH=$(curl -sL "https://codeload.github.com/$PKG_REPO/tar.gz/$PKG_VER" | sha256sum | cut -b -64)
+
+		local OLD_VER=$(grep -Po "PKG_VERSION:=\K.*" "$PKG_FILE")
+
+		echo "$OLD_VER $PKG_VER $NEW_VER $NEW_HASH"
+
+		if [[ $NEW_VER =~ ^[0-9].* ]] && dpkg --compare-versions "$OLD_VER" lt "$NEW_VER"; then
+			sed -i "s/PKG_VERSION:=.*/PKG_VERSION:=$NEW_VER/g" "$PKG_FILE"
+			sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" "$PKG_FILE"
+			echo "$PKG_FILE version has been updated!"
+		else
+			echo "$PKG_FILE version is already the latest!"
+		fi
+	done
 }
+
+#UPDATE_VERSION "软件包名" "测试版，true，可选，默认为否"
+UPDATE_VERSION "sing-box" "true"
+UPDATE_VERSION "tailscale"
