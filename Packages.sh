@@ -31,9 +31,9 @@ UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
 UPDATE_PACKAGE "mihomo" "morytyann/OpenWrt-mihomo" "main"
 UPDATE_PACKAGE "design" "gngpp/luci-theme-design" "js"
 UPDATE_PACKAGE "design-config" "gngpp/luci-app-design-config" "master"
-UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
+UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev"
 
-UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
+#UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
 
 #更新软件包版本
 UPDATE_VERSION() {
