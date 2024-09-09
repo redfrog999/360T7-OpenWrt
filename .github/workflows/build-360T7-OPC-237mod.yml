@@ -16,7 +16,7 @@ on:
 #    - cron: 0 8 * * 5
 
 env:
-  REPO_URL: REPO_URL: https://github.com/NicolasMe9907/237-immortalwrt-mt798x
+  REPO_URL: https://github.com/NicolasMe9907/237-immortalwrt-mt798x
   REPO_BRANCH: openwrt-21.02
   DEVICE_NAME: 360T7 
   FILES: files
