@@ -117,15 +117,10 @@ jobs:
 
     - name: Custom Packages
       run: |
-        chmod +x $PACKAGES_SH
-        cd /workdir/openwrt/package/ 
-        $GITHUB_WORKSPACE/$PACKAGES_SH     
+        cd ./wrt/package/
 
-    - name: Custom Handles
-      run: |
-        chmod +x $HANDLES_SH
-        cd /workdir/openwrt/package/
-        $GITHUB_WORKSPACE/$HANDLES_SH
+        $GITHUB_WORKSPACE/Packages.sh
+        $GITHUB_WORKSPACE/Handles.sh
 		
     - name: Load custom configuration
       run: |
