@@ -6778,14 +6778,14 @@ CONFIG_PACKAGE_miniupnpd=y
 # CONFIG_PACKAGE_bind-server is not set
 # CONFIG_PACKAGE_bind-tools is not set
 # CONFIG_PACKAGE_chinadns is not set
-# CONFIG_PACKAGE_chinadns-ng=y
+# CONFIG_PACKAGE_chinadns-ng is not set
 # CONFIG_PACKAGE_ddns-go is not set
 # CONFIG_PACKAGE_ddns-scripts is not set
 # CONFIG_PACKAGE_ddns-scripts-services is not set
 # CONFIG_PACKAGE_dhcp-forwarder is not set
 # CONFIG_PACKAGE_dns-forwarder is not set
-CONFIG_PACKAGE_dns2socks=y
-CONFIG_PACKAGE_dns2tcp=y
+# CONFIG_PACKAGE_dns2socks is not set
+# CONFIG_PACKAGE_dns2tcp is not set
 # CONFIG_PACKAGE_dnscrypt-proxy is not set
 # CONFIG_PACKAGE_dnscrypt-proxy-resolvers is not set
 # CONFIG_PACKAGE_dnsdist is not set
@@ -7489,7 +7489,7 @@ CONFIG_PACKAGE_ethtool=y
 CONFIG_PACKAGE_ipset=y
 # CONFIG_PACKAGE_ipset-dns is not set
 # CONFIG_PACKAGE_ipset-lists is not set
-CONFIG_PACKAGE_ipt2socks=y
+# CONFIG_PACKAGE_ipt2socks is not set
 # CONFIG_PACKAGE_iptraf-ng is not set
 # CONFIG_PACKAGE_iputils-arping is not set
 # CONFIG_PACKAGE_iputils-clockdiff is not set
@@ -7654,7 +7654,7 @@ CONFIG_PACKAGE_smartdns=y
 # CONFIG_PACKAGE_tayga is not set
 CONFIG_PACKAGE_tcpdump=y
 # CONFIG_PACKAGE_tcpdump-mini is not set
-CONFIG_PACKAGE_tcping=y
+# CONFIG_PACKAGE_tcping is not set
 # CONFIG_PACKAGE_tcping-simple is not set
 # CONFIG_PACKAGE_tcpping is not set
 # CONFIG_PACKAGE_tgt is not set
