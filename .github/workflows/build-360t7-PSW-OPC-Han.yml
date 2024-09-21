@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-Hanwckf-PSW1&2.SB.XR-ipt精简
+name: 360t7-openwrt-23.05-MProxy
 
 on:
   repository_dispatch:
@@ -20,10 +20,10 @@ on:
         default: 'false'
 
 env:
-  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x
-  REPO_BRANCH: openwrt-21.02
+  REPO_URL: https://github.com/redfrog999/openwrt
+  REPO_BRANCH: openwrt-23.05
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config.360t7-OPC-PSW1&2.SB-han
+  CONFIG_FILE: .config.360t7-23.05
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
   PACKAGES_SH: Packages.sh
