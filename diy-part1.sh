@@ -18,6 +18,6 @@
 #echo 'src-git alist https://github.com/sbwml/luci-app-alist' >>feeds.conf.default
 
 # 添加插件源码
-#sed -i '$a src-git-full kenzo https://github.com/redfrog999/openwrt-packages' feeds.conf.default
+sed -i '$a src-git-full kenzo https://github.com/redfrog999/openwrt-packages' feeds.conf.default
 #sed -i '$a src-git-full kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
-sed -i '$a src-git kiddin9 https://github.com/redfrog999/kiddin9-openwrt-packages' feeds.conf.default
+
