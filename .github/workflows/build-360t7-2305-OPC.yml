@@ -7,8 +7,8 @@
 # https://github.com/P3TERX/Actions-OpenWrt
 # Description: Build OpenWrt using GitHub Actions
 #
-
-name: 360t7-openwrt-23.05-MProxy
+#name: 360t7-openwrt-23.05-MProxy
+name: 23.05不稳定暂停
 
 on:
   repository_dispatch:
