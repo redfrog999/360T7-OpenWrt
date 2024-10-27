@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360T7-237-SMD-Only.OPC
+name: 360T7-237-SMD-Only.PSW
 
 on:
   repository_dispatch:
@@ -24,7 +24,7 @@ env:
   #REPO_BRANCH: master
   REPO_BRANCH: openwrt-21.02
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config.360t7-237-OPC
+  CONFIG_FILE: .config.360t7-237-PSW
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
   PACKAGES_SH: Packages.sh
