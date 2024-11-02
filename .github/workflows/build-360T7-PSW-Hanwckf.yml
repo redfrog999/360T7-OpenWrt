@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 360t7-Hanwckf-Only.PSW.Nlbw
+name: 360t7-Hanwckf-Only.PSW
 #name: 暂停维护
 
 on:
