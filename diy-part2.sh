@@ -28,17 +28,9 @@ rm -rf feeds/packages/lang/golang
 git clone -b 23.x --single-branch https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
 echo '=========Replace golang OK!========='
 
-#echo '替换Passwall软件'
-#rm -rf feeds/luci/applications/luci-app-passwall
-#git clone -b main --single-branch https://github.com/xiaorouji/openwrt-passwall feeds/luci/applications/luci-app-passwall
-#mv feeds/luci/applications/luci-app-passwall/luci-app-passwall/* feeds/luci/applications/luci-app-passwall/
-#rm -rf feeds/luci/applications/luci-app-passwall/luci-app-passwall
-#echo '=========Replace passwall source OK!========='
+# drop mosdns and v2ray-geodata packages that come with the source
+find ./ | grep Makefile | grep v2ray-geodata | xargs rm -f
+find ./ | grep Makefile | grep mosdns | xargs rm -f
 
-#echo '修改Passwall检测规则'
-#sed -i 's/socket" "iptables-mod-//g' feeds/luci/applications/luci-app-passwall/root/usr/share/passwall/app.sh
-#echo '=========ALTER passwall denpendcies check OK!========='
-
-#echo '开启sing-box的CGO标记'
-#sed -i 's/CGO_ENABLED=0/CGO_ENABLED=1/g' feeds/passwall/sing-box/Makefile
-#echo '=========Enable sing-box CGO FLAG OK !========='
+git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
+git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
