@@ -26,9 +26,9 @@ UPDATE_PACKAGE "luci-app-advancedplus" "VIKINGYFY/luci-app-advancedplus" "main"
 UPDATE_PACKAGE "alpha" "derisamedia/luci-theme-alpha" "master"
 UPDATE_PACKAGE "alpha-config" "animegasan/luci-app-alpha-config" "master"
 
-UPDATE_PACKAGE "tinyfilemanager" "muink/luci-app-tinyfilemanager" "master"
-UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
-UPDATE_PACKAGE "mihomo" "morytyann/OpenWrt-mihomo" "main"
+#UPDATE_PACKAGE "tinyfilemanager" "muink/luci-app-tinyfilemanager" "master"
+#UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
+UPDATE_PACKAGE "mihomo" "morytyann/OpenWrt-nikki" "main"
 UPDATE_PACKAGE "design" "kenzok78/luci-theme-design" "js"
 UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev"
 
