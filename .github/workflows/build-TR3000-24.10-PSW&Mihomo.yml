@@ -7,7 +7,7 @@
 # https://github.com/P3TERX/Actions-OpenWrt
 # Description: Build OpenWrt using GitHub Actions
 #
-name: TR3000-openwrt-24.10-Mihomo&PSW
+name: TR3000-openwrt-23.05-Mihomo&PSW
 
 on:
   repository_dispatch:
