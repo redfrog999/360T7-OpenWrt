@@ -45,6 +45,10 @@ rm -rf feeds/luci/applications/{luci-app-passwall,luci-app-ssr-libev-server}
 git clone https://github.com/xiaorouji/openwrt-passwall package/passwall-luci
 # ------------------------------------------------------------
 
+# Passwall2
+rm -rf feeds/luci/applications/luci-app-passwall2
+git clone https://github.com/xiaorouji/openwrt-passwall2 package/luci-app-passwall2
+
 # 优化socat中英翻译
 sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat.po
 
@@ -74,6 +78,7 @@ rm -rf feeds/luci/themes/luci-theme-argon
 # git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
 merge_package openwrt-24.10 https://github.com/sbwml/luci-theme-argon package luci-theme-argon
 git clone --depth=1 -b js https://github.com/lwb1978/luci-theme-kucat package/luci-theme-kucat
+git clone --depth=1 -b main https://github.com/sirpdboy/luci-app-advancedplus  package/luci-app-advancedplus
 
 # 取消自添加主题的默认设置
 find package/luci-theme-*/* -type f -print | grep '/root/etc/uci-defaults/' | while IFS= read -r file; do
