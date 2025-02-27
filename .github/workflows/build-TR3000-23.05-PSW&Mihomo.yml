@@ -11,7 +11,7 @@ on:
 #    - cron: 0 8 * * 5
 
 env:
-  REPO_URL: https://github.com/immortalwrt/immortalwrt.git
+  REPO_URL: https://github.com/redfrog999/immortalwrt.git
   REPO_BRANCH: openwrt-23.05
   DEVICE_NAME: TR3K-Im
   FILES: immortalwrt/files
