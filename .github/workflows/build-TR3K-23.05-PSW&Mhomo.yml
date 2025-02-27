@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 #name: TR3000-openwrt-23.05-Mihomo&PSW
-name：rust报错停止使用
+name: rust报错停止使用
 
 on:
   repository_dispatch:
