@@ -30,11 +30,11 @@ sed -i '1i src-git kenzo https://github.com/redfrog999/openwrt-packages' feeds.c
 # svn export https://github.com/padavanonly/immortalwrt/trunk/target/linux/ramips target/linux/ramips
 
 # 修改系统版本（界面显示）
-# VERSION=${GITHUB_WORKSPACE}/immortalwrt/version
-# VERSION_TEXT=$(head -n 1 ${VERSION} | tr -d ' \r\n')
-# if [ -n "$VERSION_TEXT" ]; then
-#	sed -i "/^VERSION_NUMBER:=.*SNAPSHOT/s/SNAPSHOT/${VERSION_TEXT}/" include/version.mk
-# fi
+VERSION=${GITHUB_WORKSPACE}/immortalwrt/version
+VERSION_TEXT=$(head -n 1 ${VERSION} | tr -d ' \r\n')
+if [ -n "$VERSION_TEXT" ]; then
+        sed -i "/^VERSION_NUMBER:=.*SNAPSHOT/s/SNAPSHOT/${VERSION_TEXT}/" include/version.mk
+fi
 
 
 echo "========================="
