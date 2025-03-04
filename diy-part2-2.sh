@@ -23,8 +23,8 @@ sed -i 's/192.168.1.1/192.168.15.1/g' package/base-files/files/bin/config_genera
 #Install TinyFileManager
 #git clone --depth 1 --branch master --single-branch --no-checkout https://github.com/muink/luci-app-tinyfilemanager.git package/luci-app-tinyfilemanager
 
-echo '替换golang到1.23.x'
+echo '替换golang到1.24.x'
 rm -rf feeds/packages/lang/golang
-git clone -b 23.x --single-branch https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
+git clone -b 24.x --single-branch https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
 echo '=========Replace golang OK!========='
 
