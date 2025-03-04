@@ -7,7 +7,8 @@
 # https://github.com/P3TERX/Actions-OpenWrt
 # Description: Build OpenWrt using GitHub Actions
 #
-name: TR3000-openwrt-24.10-Nikki&PSW
+# name: TR3000-openwrt-24.10-Nikki&PSW
+name: 即将停止支持
 
 on:
   repository_dispatch:
