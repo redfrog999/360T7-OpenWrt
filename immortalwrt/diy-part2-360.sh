@@ -90,7 +90,7 @@ find package/luci-theme-*/* -type f -print | grep '/root/etc/uci-defaults/' | wh
 done
 
 # 设置默认主题
-default_theme='argon'
+default_theme='kucat'
 sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/config/luci
 
 # unzip
