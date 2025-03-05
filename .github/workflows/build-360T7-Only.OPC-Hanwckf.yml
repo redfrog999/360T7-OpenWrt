@@ -9,7 +9,6 @@
 #
 
 name: 360t7-Hanwckf-Only.OPC
-#name: 暂停维护
 
 on:
   repository_dispatch:
