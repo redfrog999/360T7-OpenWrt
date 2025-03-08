@@ -13,8 +13,8 @@
 echo "开始 DIY2 配置……"
 echo "========================="
 
-chmod +x ${GITHUB_WORKSPACE}/immortalwrt/function.sh
-source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
+# chmod +x ${GITHUB_WORKSPACE}/immortalwrt/function.sh
+# source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 
 # 修改x86内核到6.6版
 # sed -i 's/KERNEL_PATCHVER:=.*/KERNEL_PATCHVER:=6.6/g' ./target/linux/x86/Makefile
@@ -80,7 +80,7 @@ git clone https://github.com/lwb1978/openwrt-gecoosac package/openwrt-gecoosac
 # 添加主题
 rm -rf feeds/luci/themes/luci-theme-argon
 # git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
-merge_package openwrt-24.10 https://github.com/sbwml/luci-theme-argon package luci-theme-argon
+merge_package openwrt-22.03 https://github.com/sbwml/luci-theme-argon package luci-theme-argon
 git clone --depth=1 -b js https://github.com/sirpdboy/luci-theme-kucat package/luci-theme-kucat
 git clone --depth=1 -b main https://github.com/sirpdboy/luci-app-advancedplus  package/luci-app-advancedplus
 
@@ -154,19 +154,19 @@ pushd feeds/packages
 popd
 
 # 修正部分从第三方仓库拉取的软件 Makefile 路径问题
-# find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/luci.mk/$(TOPDIR)\/feeds\/luci\/luci.mk/g' {}
-# find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
-# find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHREPO/PKG_SOURCE_URL:=https:\/\/github.com/g' {}
-# find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHCODELOAD/PKG_SOURCE_URL:=https:\/\/codeload.github.com/g' {}
+find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/luci.mk/$(TOPDIR)\/feeds\/luci\/luci.mk/g' {}
+find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
+find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHREPO/PKG_SOURCE_URL:=https:\/\/github.com/g' {}
+find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHCODELOAD/PKG_SOURCE_URL:=https:\/\/codeload.github.com/g' {}
 
 # 自定义默认配置
 # sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 # cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
 
 # 拷贝自定义文件
-if [ -n "$(ls -A "${GITHUB_WORKSPACE}/immortalwrt/diy" 2>/dev/null)" ]; then
+# if [ -n "$(ls -A "${GITHUB_WORKSPACE}/immortalwrt/diy" 2>/dev/null)" ]; then
 	cp -Rf ${GITHUB_WORKSPACE}/immortalwrt/diy/* .
-fi
+# fi
 
 #./scripts/feeds update -a
 #./scripts/feeds install -a
