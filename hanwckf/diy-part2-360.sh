@@ -164,9 +164,9 @@ find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_U
 # cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
 
 # 拷贝自定义文件
-# if [ -n "$(ls -A "${GITHUB_WORKSPACE}/immortalwrt/diy" 2>/dev/null)" ]; then
-	cp -Rf ${GITHUB_WORKSPACE}/immortalwrt/diy/* .
-# fi
+if [ -n "$(ls -A "${GITHUB_WORKSPACE}/immortalwrt/diy" 2>/dev/null)" ]; then
+	cp -Rf ${GITHUB_WORKSPACE}/hanwckf/diy/* .
+fi
 
 #./scripts/feeds update -a
 #./scripts/feeds install -a
