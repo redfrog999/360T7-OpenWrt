@@ -13,8 +13,8 @@
 echo "开始 DIY2 配置……"
 echo "========================="
 
-# chmod +x ${GITHUB_WORKSPACE}/immortalwrt/function.sh
-# source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
+chmod +x ${GITHUB_WORKSPACE}/immortalwrt/function.sh
+source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 
 # 修改x86内核到6.6版
 # sed -i 's/KERNEL_PATCHVER:=.*/KERNEL_PATCHVER:=6.6/g' ./target/linux/x86/Makefile
@@ -130,9 +130,9 @@ curl_ver=$(cat feeds/packages/net/curl/Makefile | grep -i "PKG_VERSION:=" | awk 
 }
 
 # apk-tools APK管理器不再校验版本号的合法性
-# mkdir -p package/system/apk/patches && cp -f ${GITHUB_WORKSPACE}/patch/apk-tools/9999-hack-for-linux-pre-releases.patch package/system/apk/patches/
+mkdir -p package/system/apk/patches && cp -f ${GITHUB_WORKSPACE}/patch/apk-tools/9999-hack-for-linux-pre-releases.patch package/system/apk/patches/
 
-# mirror=raw.githubusercontent.com/sbwml/r4s_build_script/master
+mirror=raw.githubusercontent.com/sbwml/r4s_build_script/master
 
 # 精简 UPnP 菜单名称
 sed -i 's#\"title\": \"UPnP IGD \& PCP\"#\"title\": \"UPnP\"#g' feeds/luci/applications/luci-app-upnp/root/usr/share/luci/menu.d/luci-app-upnp.json
@@ -140,8 +140,8 @@ sed -i 's#\"title\": \"UPnP IGD \& PCP\"#\"title\": \"UPnP\"#g' feeds/luci/appli
 sed -i 's/services/network/g' feeds/luci/applications/luci-app-upnp/root/usr/share/luci/menu.d/luci-app-upnp.json
 
 # rpcd - fix timeout
-# sed -i 's/option timeout 30/option timeout 60/g' package/system/rpcd/files/rpcd.config
-# sed -i 's#20) \* 1000#60) \* 1000#g' feeds/luci/modules/luci-base/htdocs/luci-static/resources/rpc.js
+sed -i 's/option timeout 30/option timeout 60/g' package/system/rpcd/files/rpcd.config
+sed -i 's#20) \* 1000#60) \* 1000#g' feeds/luci/modules/luci-base/htdocs/luci-static/resources/rpc.js
 
 # vim - fix E1187: Failed to source defaults.vim
 pushd feeds/packages
