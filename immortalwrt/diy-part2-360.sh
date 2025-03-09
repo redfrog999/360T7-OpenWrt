@@ -118,8 +118,8 @@ sed -i 's/procd_set_param stderr 1/procd_set_param stderr 0/g' feeds/packages/ut
 # git clone https://github.com/sbwml/package_libs_ngtcp2 feeds/packages/libs/ngtcp2
 
 # curl
-# rm -rf feeds/packages/net/curl
-# git clone https://github.com/sbwml/feeds_packages_net_curl feeds/packages/net/curl
+rm -rf feeds/packages/net/curl
+git clone https://github.com/sbwml/feeds_packages_net_curl feeds/packages/net/curl
 
 # 替换curl修改版（无nghttp3、ngtcp2）
 curl_ver=$(cat feeds/packages/net/curl/Makefile | grep -i "PKG_VERSION:=" | awk 'BEGIN{FS="="};{print $2}')
