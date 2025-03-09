@@ -14,7 +14,7 @@ env:
   REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x.git
   REPO_BRANCH: openwrt-21.02
   DEVICE_NAME: 360t7-Im
-  FILES: immortalwrt/files
+  FILES: hanwckf/files
   FEEDS_CONF: hanwckf/feeds.conf.default
   CONFIG_FILE: hanwckf/.config.360T7-21.02.bak
   DIY_P1_SH: hanwckf/diy-part1.sh
