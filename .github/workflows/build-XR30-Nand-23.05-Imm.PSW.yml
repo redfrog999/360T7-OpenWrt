@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt XR30-Nand Im-23.05
+name: OpenWrt XR30 Nand Imm-23.05
 
 on:
   repository_dispatch:
