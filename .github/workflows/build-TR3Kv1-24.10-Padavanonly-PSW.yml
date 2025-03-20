@@ -12,7 +12,7 @@ on:
 
 env:
   REPO_URL: https://github.com/NicolasMe9907/immortalwrt-mt798x-24.10.git
-  REPO_BRANCH: 24.10
+  REPO_BRANCH: 2410
   DEVICE_NAME: TR3Kv1-Padavanonly
   FILES: immortalwrt/files
   FEEDS_CONF: immortalwrt/feeds.conf.default
