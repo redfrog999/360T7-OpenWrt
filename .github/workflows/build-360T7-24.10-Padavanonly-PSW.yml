@@ -14,11 +14,11 @@ env:
   REPO_URL: https://github.com/NicolasMe9907/immortalwrt-mt798x-24.10.git
   REPO_BRANCH: openwrt-24.10
   DEVICE_NAME: 360t7-Padavanonly
-  FILES: padavanonly/files
-  FEEDS_CONF: padavanonly/feeds.conf.default
-  CONFIG_FILE: padavanonly/.config.360T7-Padavanonly.24.10.bak
-  DIY_P1_SH: padavanonly/diy-part1.sh
-  DIY_P2_SH: padavanonly/diy-part2-T7.2410.sh
+  FILES: immortalwrt/files
+  FEEDS_CONF: immortalwrt/feeds.conf.default
+  CONFIG_FILE: immortalwrt/.config.360T7-Padavanonly.24.10.bak
+  DIY_P1_SH: immortalwrt/diy-part1.sh
+  DIY_P2_SH: immortalwrt/diy-part2-T7.2305.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: false
