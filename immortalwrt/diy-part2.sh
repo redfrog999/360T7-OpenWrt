@@ -86,14 +86,14 @@ find package/luci-theme-*/* -type f -print | grep '/root/etc/uci-defaults/' | wh
 done
 
 # 设置默认主题
-default_theme='argon'
+default_theme='kucat'
 sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/config/luci
 
 # unzip
 rm -rf feeds/packages/utils/unzip
 git clone https://github.com/sbwml/feeds_packages_utils_unzip feeds/packages/utils/unzip
 
-# golang 1.23
+# golang 1.24
 rm -rf feeds/packages/lang/golang
 git clone --depth=1 https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
 
