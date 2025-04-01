@@ -2,8 +2,8 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt 360T7 Imm-24.10
-
+#name: OpenWrt 360T7 Imm-24.10
+name: 暂停维护
 on:
   repository_dispatch:
   workflow_dispatch:
