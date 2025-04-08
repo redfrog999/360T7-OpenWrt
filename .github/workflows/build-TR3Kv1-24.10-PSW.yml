@@ -11,7 +11,7 @@ on:
 
 env:
   REPO_URL: https://github.com/redfrog999/immortalwrt.git
-  REPO_BRANCH: openwrt-24.10
+  REPO_BRANCH: 2410
   DEVICE_NAME: TR3Kv1-Im
   FILES: immortalwrt/files
   FEEDS_CONF: immortalwrt/feeds.conf.default
