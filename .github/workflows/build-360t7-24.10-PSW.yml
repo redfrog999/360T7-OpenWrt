@@ -2,8 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-#name: OpenWrt 360T7 Imm-24.10
-name: 暂停维护
+name: OpenWrt Cudy TR3Kv1 Im-24.10
 on:
   repository_dispatch:
   workflow_dispatch:
@@ -13,12 +12,12 @@ on:
 env:
   REPO_URL: https://github.com/redfrog999/immortalwrt.git
   REPO_BRANCH: openwrt-24.10
-  DEVICE_NAME: 360t7-Im
+  DEVICE_NAME: TR3Kv1-Im
   FILES: immortalwrt/files
   FEEDS_CONF: immortalwrt/feeds.conf.default
-  CONFIG_FILE: immortalwrt/.config.360t7-24.10.bak
+  CONFIG_FILE: immortalwrt/.config.TR3K-24.10.bak
   DIY_P1_SH: immortalwrt/diy-part1.sh
-  DIY_P2_SH: immortalwrt/diy-part2-T7.2305.sh
+  DIY_P2_SH: immortalwrt/diy-part2.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: false
