@@ -1,8 +1,9 @@
 #
 # Description: Build OpenWrt using GitHub Actions
 #
+#name: OpenWrt TR3Kv1 Imm-24.10
+name: 暂停更新
 
-name: OpenWrt TR3Kv1 Imm-24.10
 on:
   repository_dispatch:
   workflow_dispatch:
