@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt Cudy TR3Kv1 Im-24.10
+name: OpenWrt TR3Kv1 Imm-24.10
 on:
   repository_dispatch:
   workflow_dispatch:
