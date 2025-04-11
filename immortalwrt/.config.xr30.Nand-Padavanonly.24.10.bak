@@ -345,7 +345,7 @@ CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Xray=y
 CONFIG_PACKAGE_luci-app-passwall_Nftables_Transparent_Proxy=y
 # CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-ng is not set
 # CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-webui is not set
-# CONFIG_PACKAGE_luci-app-samba4=y
+CONFIG_PACKAGE_luci-app-samba4=y
 CONFIG_PACKAGE_luci-app-smartdns=y
 CONFIG_PACKAGE_luci-app-socat=y
 CONFIG_PACKAGE_luci-app-ttyd=y
@@ -360,7 +360,7 @@ CONFIG_PACKAGE_luci-i18n-modemband-zh-cn=y
 CONFIG_PACKAGE_luci-i18n-mtwifi-cfg-zh-cn=y
 CONFIG_PACKAGE_luci-i18n-passwall-zh-cn=y
 CONFIG_PACKAGE_luci-i18n-passwall2-zh-cn=y
-# CONFIG_PACKAGE_luci-i18n-samba4-zh-cn=y
+CONFIG_PACKAGE_luci-i18n-samba4-zh-cn=y
 CONFIG_PACKAGE_luci-i18n-smartdns-zh-cn=y
 CONFIG_PACKAGE_luci-i18n-socat-zh-cn=y
 CONFIG_PACKAGE_luci-i18n-ttyd-zh-cn=y
@@ -381,8 +381,8 @@ CONFIG_PACKAGE_openssl-util=y
 CONFIG_PACKAGE_parted=y
 CONFIG_PACKAGE_regs=y
 CONFIG_PACKAGE_resolveip=y
-# CONFIG_PACKAGE_samba4-libs=y
-# CONFIG_PACKAGE_samba4-server=y
+CONFIG_PACKAGE_samba4-libs=y
+CONFIG_PACKAGE_samba4-server=y
 CONFIG_PACKAGE_shadowsocks-libev-config=y
 CONFIG_PACKAGE_shadowsocks-libev-ss-local=y
 CONFIG_PACKAGE_shadowsocks-libev-ss-redir=y
@@ -414,10 +414,10 @@ CONFIG_PARTED_READLINE=y
 # CONFIG_PKG_CHECK_FORMAT_SECURITY is not set
 # CONFIG_PKG_FORTIFY_SOURCE_1 is not set
 CONFIG_PKG_FORTIFY_SOURCE_2=y
-# CONFIG_SAMBA4_SERVER_AVAHI=y
-# CONFIG_SAMBA4_SERVER_NETBIOS=y
-# CONFIG_SAMBA4_SERVER_VFS=y
-# CONFIG_SAMBA4_SERVER_WSDD2=y
+CONFIG_SAMBA4_SERVER_AVAHI=y
+CONFIG_SAMBA4_SERVER_NETBIOS=y
+CONFIG_SAMBA4_SERVER_VFS=y
+CONFIG_SAMBA4_SERVER_WSDD2=y
 CONFIG_SING_BOX_BUILD_ACME=y
 CONFIG_SING_BOX_BUILD_CLASH_API=y
 CONFIG_SING_BOX_BUILD_ECH=y
