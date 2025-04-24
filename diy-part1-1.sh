@@ -13,8 +13,8 @@
 # Uncomment a feed source
 #sed -i "/helloworld/d" "feeds.conf.default"
 #echo "src-git helloworld https://github.com/fw876/helloworld.git" >> "feeds.conf.default"
-#echo 'src-git messense https://github.com/messense/aliyundrive-webdav' >>feeds.conf.default
-echo "src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git;main" >> "feeds.conf.default"
+echo "src-git advancedplus https://github.com/sirpdboy/luci-app-advancedplus.git;main" >> "feeds.conf.default"
+echo "src-git kucat https://github.com/sirpdboy/luci-theme-kucat.git;js" >> "feeds.conf.default"
 echo "src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main" >> "feeds.conf.default"
 echo "src-git passwall https://github.com/xiaorouji/openwrt-passwall.git;main" >> "feeds.conf.default"
 echo "src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main" >> "feeds.conf.default"
