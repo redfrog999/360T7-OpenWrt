@@ -23,14 +23,6 @@ UPDATE_PACKAGE() {
 #UPDATE_PACKAGE "包名" "项目地址" "项目分支" "pkg/name，可选，pkg为从大杂烩中单独提取包名插件；name为重命名为包名"
 UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "js"
 UPDATE_PACKAGE "luci-app-advancedplus" "sirpdboy/luci-app-advancedplus" "main"
-UPDATE_PACKAGE "alpha" "derisamedia/luci-theme-alpha" "master"
-UPDATE_PACKAGE "alpha-config" "animegasan/luci-app-alpha-config" "master"
-
-#UPDATE_PACKAGE "tinyfilemanager" "muink/luci-app-tinyfilemanager" "master"
-#UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
-UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
-UPDATE_PACKAGE "design" "kenzok78/luci-theme-design" "js"
-UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev"
 
 #UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
 
