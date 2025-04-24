@@ -24,9 +24,10 @@ env:
   FEEDS_CONF: ramips-hnat/feeds.conf.default.bak
   CONFIG_FILE: ramips-hnat/.config.TR3K-23.05.bak
   #CONFIG_FILE: ramips-hnat/.config.EA7500v2-22.03-Xray
-  DIY_P1_SH: /diy-part1-1.sh
-  DIY_P2_SH: /diy-part2-2.sh
-  PACKAGES_SH: ramips-hnat/Packages.sh
+  DIY_P1_SH: diy-part1-1.sh
+  DIY_P2_SH: diy-part2-2.sh
+  PACKAGES_SH: Packages.sh
+  HANDLES_SH: Handles.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: false
