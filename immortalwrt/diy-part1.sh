@@ -22,7 +22,7 @@ sed -i '1i src-git kenzo https://github.com/redfrog999/openwrt-packages' feeds.c
 # sed -i '$a src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git;main' feeds.conf.default
 # sed -i '$a src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main' feeds.conf.default
 # sed -i '$a src-git passwall https://github.com/xiaorouji/openwrt-passwall.git;main' feeds.conf.default
-# sed -i '$a src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main' feeds.conf.default
+sed -i '$a src-git luci-app-smartdns https://github.com/lwb1978/luci-app-smartdns;master' feeds.conf.default
 # sed -i '$a src-git kucat https://github.com/sirpdboy/luci-theme-kucat.git;js' feeds.conf.default
 # sed -i '$a src-git luci-app-advancedplus https://github.com/sirpdboy/luci-app-advancedplus.git;main' feeds.conf.default
 
