@@ -17,7 +17,7 @@ env:
   FILES: immortalwrt/files
   FEEDS_CONF: immortalwrt/feeds.conf.default
   CONFIG_FILE: immortalwrt/.config.XR30-21.02.bak
-  DIY_P1_SH: immortalwrt/diy-part1.sh
+  DIY_P1_SH: immortalwrt/diy-part1-xr30.Nand.sh
   DIY_P2_SH: immortalwrt/diy-part2-xr30-Nand.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
