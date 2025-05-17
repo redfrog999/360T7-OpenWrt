@@ -57,8 +57,8 @@ git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
 sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat.po
 
 # SmartDNS
-rm -rf feeds/luci/applications/luci-app-smartdns
-git clone https://github.com/lwb1978/luci-app-smartdns package/luci-app-smartdns
+# rm -rf feeds/luci/applications/luci-app-smartdns
+# git clone https://github.com/lwb1978/luci-app-smartdns package/luci-app-smartdns
 # 替换immortalwrt 软件仓库smartdns版本为官方最新版
 rm -rf feeds/packages/net/smartdns
 cp -rf ${GITHUB_WORKSPACE}/patch/smartdns feeds/packages/net
