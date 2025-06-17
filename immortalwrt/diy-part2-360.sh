@@ -63,6 +63,11 @@ git clone https://github.com/lwb1978/luci-app-smartdns package/luci-app-smartdns
 rm -rf feeds/packages/net/smartdns
 cp -rf ${GITHUB_WORKSPACE}/patch/smartdns feeds/packages/net
 
+# openssl Enable QUIC and KTLS supportAdd commentMore actions
+curl -s https://github.com/openwrt/openwrt/commit/362aea4649485ca7c31ce42c371d5051e7dead4d.patch | patch -p1
+echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config
+# echo "CONFIG_OPENSSL_WITH_KTLS=y" >> .config
+
 # 替换udpxy为修改版，解决组播源数据有重复数据包导致的花屏和马赛克问题
 rm -rf feeds/packages/net/udpxy/Makefile
 cp -rf ${GITHUB_WORKSPACE}/patch/udpxy/Makefile feeds/packages/net/udpxy/
