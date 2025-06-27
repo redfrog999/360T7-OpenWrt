@@ -44,5 +44,6 @@ if [ -n "$VERSION_TEXT" ]; then
 	sed -i "/^VERSION_NUMBER:=.*SNAPSHOT/s/SNAPSHOT/${VERSION_TEXT}/" include/version.mk
 fi
 
+
 echo "========================="
 echo " DIY1 配置完成……"
