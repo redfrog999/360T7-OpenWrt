@@ -68,7 +68,6 @@ echo "CONFIG_PACKAGE_smartdns-ui=y" >> .config
 
 # openssl Enable QUIC and KTLS support
 echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config.360T7-Padavanonly.24.10.bak
-echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config.360T7-23.05.bak
 # echo "CONFIG_OPENSSL_WITH_KTLS=y" >> .config
 
 # 替换udpxy为修改版，解决组播源数据有重复数据包导致的花屏和马赛克问题
