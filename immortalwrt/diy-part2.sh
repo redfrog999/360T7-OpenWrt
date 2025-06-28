@@ -57,7 +57,6 @@ git clone https://github.com/lwb1978/openwrt-smartdns package/smartdns
 echo "CONFIG_PACKAGE_smartdns-ui=y" >> .config
 
 # openssl Enable QUIC and KTLS support
-echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config.TR3K-23.05.bak
 echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config.TR3K-24.10.bak
 echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config.TR3Kv1-Padavanonly.24.10.bak
 
