@@ -57,8 +57,8 @@ git clone https://github.com/lwb1978/openwrt-smartdns package/smartdns
 echo "CONFIG_PACKAGE_smartdns-ui=y" >> .config
 
 # openssl Enable QUIC and KTLS support
-echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config.TR3K-24.10.bak
-echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config.TR3Kv1-Padavanonly.24.10.bak
+echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config
+#echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config
 
 # 替换udpxy为修改版，解决组播源数据有重复数据包导致的花屏和马赛克问题
 rm -rf feeds/packages/net/udpxy/Makefile
