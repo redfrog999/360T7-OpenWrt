@@ -105,7 +105,7 @@ git clone --depth=1 https://github.com/sbwml/packages_lang_golang -b 25.x feeds/
 
 # golang 1.24
 rm -rf feeds/packages/lang/golang
-git clone --depth=1 -b 25.x https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
+git clone --depth=1 https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
 
 # luci-app-filemanager
 rm -rf feeds/luci/applications/luci-app-filemanager
