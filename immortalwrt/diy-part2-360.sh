@@ -101,7 +101,7 @@ sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/conf
 
 # unzip
 rm -rf feeds/packages/utils/unzip
-git clone --depth=1 https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
+git clone https://github.com/sbwml/feeds_packages_utils_unzip feeds/packages/utils/unzip
 
 # golang 1.25
 rm -rf feeds/packages/lang/golang
