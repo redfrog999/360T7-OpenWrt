@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt XR30 Nand Imm-24.10
+name: OpenWrt XR30 Nand Openwrt-24.10-6.6
 
 on:
   repository_dispatch:
@@ -11,12 +11,12 @@ on:
 #    - cron: 0 8 * * 5
 
 env:
-  REPO_URL: https://github.com/redfrog999/immortalwrt.git
-  REPO_BRANCH: openwrt-24.10
-  DEVICE_NAME: XR30.Nand-Im
+  REPO_URL: https://github.com/NicolasMe9907/immortalwrt-mt798x-24.10.git
+  REPO_BRANCH: oopenwrt-24.10-6.6
+  DEVICE_NAME: XR30.Nand
   FILES: immortalwrt/files
   FEEDS_CONF: immortalwrt/feeds.conf.default
-  CONFIG_FILE: immortalwrt/.config.XR30-Nand.24.10.bak
+  CONFIG_FILE: immortalwrt/.config.XR30-Nand-Openwrt-24.10-6.6.bak
   DIY_P1_SH: immortalwrt/diy-part1.sh
   DIY_P2_SH: immortalwrt/diy-part2-xr30-Nand.2305.sh
   UPLOAD_BIN_DIR: false
