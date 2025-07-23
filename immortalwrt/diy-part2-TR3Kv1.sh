@@ -22,9 +22,12 @@ sed -i 's/192.168.6.1/192.168.15.1/g' package/base-files/files/bin/config_genera
 # 最大连接数修改为65535
 # sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' package/base-files/files/etc/sysctl.conf
 
-# 修复上移下移按钮翻译
+# luci-compat - 修复上移下移按钮翻译
 sed -i 's/<%:Up%>/<%:Move up%>/g' feeds/luci/modules/luci-compat/luasrc/view/cbi/tblsection.htm
 sed -i 's/<%:Down%>/<%:Move down%>/g' feeds/luci/modules/luci-compat/luasrc/view/cbi/tblsection.htm
+
+# luci-compat - remove extra line breaks from description
+sed -i '/<br \/>/d' feeds/luci/modules/luci-compat/luasrc/view/cbi/full_valuefooter.htm
 
 # ------------------PassWall 科学上网--------------------------
 # 移除 openwrt feeds 自带的核心库
@@ -142,6 +145,12 @@ popd
 
 #./scripts/feeds update -a
 #./scripts/feeds install -a
+
+# update samba4 to latest version
+rm -rf feeds/packages/libs/liburing
+git clone https://github.com/sbwml/feeds_packages_libs_liburing feeds/packages/libs/liburing
+rm -rf feeds/packages/net/samba4
+git clone https://github.com/sbwml/feeds_packages_net_samba4 feeds/packages/net/samba4
 
 make defconfig
 
