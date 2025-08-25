@@ -53,8 +53,8 @@ rm -rf feeds/luci/applications/luci-app-passwall2
 git clone https://github.com/xiaorouji/openwrt-passwall2 package/luci-app-passwall2
 
 # Nikki
-# rm -rf feeds/luci/applications/luci-app-nikki
-# git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
+rm -rf feeds/luci/applications/luci-app-nikki
+git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
 
 # 优化socat中英翻译
 sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat.po
@@ -64,8 +64,8 @@ rm -rf feeds/luci/applications/luci-app-smartdns
 git clone https://github.com/lwb1978/luci-app-smartdns package/luci-app-smartdns
 # 替换immortalwrt 软件仓库smartdns版本为官方最新版
 rm -rf feeds/packages/net/smartdns
-git clone https://github.com/lwb1978/openwrt-smartdns package/smartdns
-# cp -rf ${GITHUB_WORKSPACE}/patch/smartdns feeds/packages/net
+# git clone https://github.com/lwb1978/openwrt-smartdns package/smartdns
+cp -rf ${GITHUB_WORKSPACE}/patch/smartdns feeds/packages/net
 # 添加 smartdns-ui
 # echo "CONFIG_PACKAGE_smartdns-ui=y" >> .config
 
