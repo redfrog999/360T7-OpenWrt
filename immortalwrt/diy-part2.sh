@@ -20,7 +20,7 @@ source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 sed -i 's/192.168.1.1/192.168.15.1/g' package/base-files/files/bin/config_generate
 
 # 最大连接数修改为65535
-# sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' package/base-files/files/etc/sysctl.conf
+sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' package/base-files/files/etc/sysctl.conf
 
 # luci-compat - 修复上移下移按钮翻译
 sed -i 's/<%:Up%>/<%:Move up%>/g' feeds/luci/modules/luci-compat/luasrc/view/cbi/tblsection.htm
@@ -144,12 +144,6 @@ pushd feeds/packages
 		patch -p1 < ${GITHUB_WORKSPACE}/patch/vim/0001-vim-fix-renamed-defaults-config-file.patch
 	}
 popd
-
-# update samba4 to latest version
-rm -rf feeds/packages/libs/liburing
-git clone https://github.com/sbwml/feeds_packages_libs_liburing feeds/packages/libs/liburing
-rm -rf feeds/packages/net/samba4
-git clone https://github.com/sbwml/feeds_packages_net_samba4 feeds/packages/net/samba4
 
 #./scripts/feeds update -a
 #./scripts/feeds install -a
