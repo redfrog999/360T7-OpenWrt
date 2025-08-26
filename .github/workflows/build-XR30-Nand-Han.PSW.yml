@@ -2,7 +2,8 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt XR30 Nand Han-21.02
+# name: OpenWrt XR30 Nand Han-21.02
+name: 停止维护
 
 on:
   repository_dispatch:
