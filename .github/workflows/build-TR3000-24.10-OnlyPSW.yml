@@ -2,8 +2,8 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt TR3K Im-24.10
-#name: 暂停维护
+# name: OpenWrt TR3K Im-24.10
+name: 暂停维护
 
 on:
   repository_dispatch:
