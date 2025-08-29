@@ -311,6 +311,7 @@ CONFIG_PACKAGE_luci-app-passwall2_INCLUDE_Shadowsocks_Rust_Client=y
 CONFIG_PACKAGE_luci-app-passwall2_INCLUDE_Simple_Obfs=y
 CONFIG_PACKAGE_luci-app-passwall2_INCLUDE_SingBox=y
 CONFIG_PACKAGE_luci-app-passwall2_Nftables_Transparent_Proxy=y
+CONFIG_PACKAGE_luci-app-passwall2_INCLUDE_Trojan_Plus=y
 CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Hysteria=y
 # CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Simple_Obfs is not set
 CONFIG_PACKAGE_luci-app-passwall_INCLUDE_V2ray_Geodata=y
@@ -350,7 +351,6 @@ CONFIG_PACKAGE_shadowsocks-rust-sslocal=y
 CONFIG_PACKAGE_shadowsocks-rust-ssserver=y
 CONFIG_PACKAGE_sing-box=y
 CONFIG_PACKAGE_smartdns=y
-CONFIG_PACKAGE_socat=y
 CONFIG_PACKAGE_swconfig=y
 CONFIG_PACKAGE_switch=y
 CONFIG_PACKAGE_tc-tiny=y
