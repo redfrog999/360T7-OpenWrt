@@ -394,6 +394,7 @@ CONFIG_PACKAGE_shadow-tls=y
 CONFIG_PACKAGE_shadowsocks-rust-sslocal=y
 CONFIG_PACKAGE_sing-box=y
 CONFIG_PACKAGE_smartdns=y
+CONFIG_PACKAGE_smartdns-ui=y
 CONFIG_PACKAGE_smartmontools=y
 CONFIG_PACKAGE_sms-tool=y
 CONFIG_PACKAGE_socat=y
