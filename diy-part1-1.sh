@@ -24,5 +24,5 @@ echo "src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main"
 
 # 添加插件源码
 #sed -i '$a src-git kiddin9 https://github.com/redfrog999/kiddin9-openwrt-packages' feeds.conf.default
-sed -i '$a src-git-full kenzo https://github.com/redfrog999/openwrt-packages' feeds.conf.default
+#sed -i '$a src-git-full kenzo https://github.com/redfrog999/openwrt-packages' feeds.conf.default
 #sed -i '$a src-git-full kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
