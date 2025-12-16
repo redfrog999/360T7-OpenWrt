@@ -2,8 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-# name: OpenWrt 360T7 Han-21.02
-name: 停止维护
+name: OpenWrt 360T7 Openwrt-24.10-6.6-NewTest
 
 on:
   repository_dispatch:
@@ -12,14 +11,15 @@ on:
 #    - cron: 0 8 * * 5
 
 env:
-  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x.git
-  REPO_BRANCH: openwrt-21.02
-  DEVICE_NAME: 360t7-Im
+  REPO_URL: https://github.com/NicolasMe9907/immortalwrt-mt798x-6.6.git
+  # REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x-6.6
+  REPO_BRANCH: openwrt-24.10-6.6
+  DEVICE_NAME: 360t7-Padavanonly
   FILES: immortalwrt/files
   FEEDS_CONF: immortalwrt/feeds.conf.default
-  CONFIG_FILE: immortalwrt/.config.360T7-21.02.bak
-  DIY_P1_SH: immortalwrt/diy-part1-T7.21.02.sh
-  DIY_P2_SH: immortalwrt/diy-part2-360.sh
+  CONFIG_FILE: immortalwrt/.config.360T7-Openwrt-24.10-6.6.bak
+  DIY_P1_SH: immortalwrt/diy-part1.sh
+  DIY_P2_SH: immortalwrt/diy-part2-T7.2305.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: false
