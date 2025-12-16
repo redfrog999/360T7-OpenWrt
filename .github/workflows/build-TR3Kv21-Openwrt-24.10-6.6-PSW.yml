@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt TR3Kv1 Openwrt-24.10-6.6
+name: OpenWrt TR3Kv1 Openwrt-24.10-6.6-Stable
 
 on:
   repository_dispatch:
