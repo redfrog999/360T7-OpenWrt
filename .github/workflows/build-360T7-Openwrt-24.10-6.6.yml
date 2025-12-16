@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt 360T7 Openwrt-24.10-6.6
+name: OpenWrt 360T7 Openwrt-24.10-6.6-Stable
 
 on:
   repository_dispatch:
