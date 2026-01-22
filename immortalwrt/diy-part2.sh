@@ -47,6 +47,10 @@ git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-
 rm -rf feeds/luci/applications/luci-app-passwall2
 git clone https://github.com/Openwrt-Passwall/openwrt-passwall2 package/luci-app-passwall2
 
+# Momo
+rm -rf feeds/luci/applications/luci-app-momo
+git clone https://github.com/nikkinikki-org/OpenWrt-momo package/luci-app-momo
+
 # 优化socat中英翻译
 sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat.po
 
