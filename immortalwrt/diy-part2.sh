@@ -29,6 +29,8 @@ sed -i 's/<%:Down%>/<%:Move down%>/g' feeds/luci/modules/luci-compat/luasrc/view
 # luci-compat - remove extra line breaks from description
 sed -i '/<br \/>/d' feeds/luci/modules/luci-compat/luasrc/view/cbi/full_valuefooter.htm
 
+#临时解决Rust问题
+sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile
 
 # ------------------PassWall 科学上网--------------------------
 # 移除 openwrt feeds 自带的核心库
