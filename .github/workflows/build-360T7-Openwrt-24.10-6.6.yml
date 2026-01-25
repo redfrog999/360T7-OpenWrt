@@ -1,116 +1,236 @@
+# Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
 #
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+# https://github.com/P3TERX/Actions-OpenWrt
 # Description: Build OpenWrt using GitHub Actions
-#
 
-name: OpenWrt 360T7 Openwrt-24.10-6.6-Stable
+name: OpenWrt 360T7 Openwrt-24.10-6.6-NoLLVM
 
 on:
   repository_dispatch:
   workflow_dispatch:
-#  schedule:
-#    - cron: 0 8 * * 5
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
 
 env:
-  # REPO_URL: https://github.com/NicolasMe9907/immortalwrt-mt798x-6.6.git
-  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x-6.6
+  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x-6.6.git
   REPO_BRANCH: openwrt-24.10-6.6
-  DEVICE_NAME: 360t7-Padavanonly
-  FILES: immortalwrt/files
-  FEEDS_CONF: immortalwrt/feeds.conf.default
+  FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: immortalwrt/.config.360T7-Openwrt-24.10-6.6.bak
   DIY_P1_SH: immortalwrt/diy-part1.sh
   DIY_P2_SH: immortalwrt/diy-part2-T7.2305.sh
-  UPLOAD_BIN_DIR: false
-  UPLOAD_FIRMWARE: true
-  UPLOAD_COWTRANSFER: false
-  UPLOAD_WETRANSFER: false
-  UPLOAD_RELEASE: false
   TZ: Asia/Shanghai
+  DEVICE: 360t7-Padavanonly
+  UPLOAD_OUTPUT: true
+  # OpenClash 配置（可选，当前由脚本自动检测）
+  CLASH_VERSION: latest
+  CLASH_CORE_DIR: openwrt/files/etc/openclash/core
 
 jobs:
-  build:
+  _360t7_padavanonly:
     runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
+    permissions:
+      contents: write
 
     steps:
-
-    - name: Checkout
+    - name: Checkout Repository (your repo with patches, config, scripts)
       uses: actions/checkout@main
-
-    - name: Setup variables
-      run: |
-        sudo timedatectl set-timezone "$TZ"
-        echo "status=success" >> ${GITHUB_OUTPUT}
-
-    - name: Show system
-      run: |
-        echo -e "\n\e[1;32mCPU:\e[0m"
-        echo "$(grep 'model name' /proc/cpuinfo | head -1 | awk -F ': ' '{print $2}') ($(grep 'cpu MHz' /proc/cpuinfo | head -1 | awk -F ': ' '{print $2}')MHz) x $(grep processor /proc/cpuinfo  | wc -l)"
-        echo -e "\n\e[1;32mMemory:\e[0m"
-        free -h
-        echo -e "\n\e[1;32mStorage:\e[0m"
-        df -Th / /mnt
-        echo -e "\n\e[1;32mSystem:\e[0m"
-        lsb_release -a
-        echo -e "\n\e[1;32mKernel:\e[0m"
-        uname -a
-        echo
-
-    - name: Free disk space
-      uses: sbwml/actions@free-disk
       with:
-        build-mount-path: /builder
+        path: repo
 
-#    - name: Build System Setup
-#      uses: sbwml/actions@openwrt-build-setup
-
-#    - name: Install LLVM
-#      uses: sbwml/actions@install-llvm
+    - name: 检查服务器配置
+      if: (!cancelled())
+      run: |
+        echo "警告⚠"
+        echo "若分配的服务器性能不足，务必及时取消，重新运行！"
+        echo "已知编译成功CPU型号：8370C,8171M"
+        echo "已知性能不足CPU型号：8272CL,E5系列"
+        echo "--------------------------CPU信息--------------------------"
+        echo "CPU物理数量:$(cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l)"
+        echo -e "CPU核心及版本信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
+        echo "--------------------------内存信息--------------------------"
+        echo "已安装内存详细信息："
+        sudo lshw -short -C memory | grep GiB
+        echo -e "\n"
+        echo "--------------------------硬盘信息--------------------------"
+        echo -e  "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
+        echo "硬盘详情："
+        df -Th
 
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
-        sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
-        curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh | sudo -E bash -
-        sudo -E apt-get install -y nodejs
+        sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)' jq file  patchelf
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
-        #sudo mkdir -p /builder
-        sudo chown $USER:$(id -gn) /builder
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /mnt/workdir
+        sudo chown $USER:$GROUPS /mnt/workdir
 
-    - name: Clone source code
-      working-directory: /builder
+    - name: Clone OpenWrt Source
+      working-directory: /mnt/workdir
       run: |
         df -hT $PWD
-        git clone -b $REPO_BRANCH --single-branch --filter=blob:none $REPO_URL openwrt
-        ln -sf /builder/openwrt $GITHUB_WORKSPACE/openwrt
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /mnt/workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: Load custom feeds
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
+        [ -e repo/$FEEDS_CONF ] && mv repo/$FEEDS_CONF openwrt/feeds.conf.default
+        [ -e repo/$DIY_P1_SH ] && chmod +x repo/$DIY_P1_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
+        $GITHUB_WORKSPACE/repo/$DIY_P1_SH
 
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
     - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
+      run: cd openwrt && ./scripts/feeds install -a -f
+
+    #- name: Replace libxcrypt Makefile with custom version
+     # run: |
+      #  cp repo/custom-files/libxcrypt-Makefile openwrt/feeds/packages/libs/libxcrypt/Makefile
+       # echo "✅ Custom Makefile applied!"
+        #ls -l openwrt/feeds/packages/libs/libxcrypt/Makefile
 
     - name: Load custom configuration
       run: |
-        #[ -e files ] && mv files openwrt/files
-        [ -e $FILES ] && mv $FILES openwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P2_SH
+        [ -e repo/files ] && mv repo/files openwrt/files
+        [ -e repo/$CONFIG_FILE ] && mv repo/$CONFIG_FILE openwrt/.config
+        [ -e repo/$DIY_P3_SH ] && chmod +x repo/$DIY_P2_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
-        #make defconfig
+        $GITHUB_WORKSPACE/repo/$DIY_P2_SH
+
+    - name: Auto-Detect & Download Mihomo (arm64) with Validation
+      run: |
+        # ==================== 配置区 ====================
+        MIHOMO_REPO="MetaCubeX/mihomo"
+        RELEASE_TAG="Prerelease-Alpha"
+        CORE_DIR="openwrt/files/etc/openclash/core"
+        TIMEOUT=30
+        # ================================================
+
+        ROOT_DIR=$(pwd)
+        FULL_CORE_DIR="$ROOT_DIR/$CORE_DIR"
+        FULL_TARGET_FILE="$FULL_CORE_DIR/clash_meta"
+
+        echo "🔧 准备安装 Mihomo 内核..."
+
+        # 1. 确保目标目录存在
+        mkdir -p "$FULL_CORE_DIR" || { echo "❌ 创建目录失败: $FULL_CORE_DIR"; exit 1; }
+
+        # 2. 确保 .config 存在
+        if [ ! -f "openwrt/.config" ]; then
+          echo "❌ 错误：openwrt/.config 不存在！请确认配置文件已正确复制"
+          exit 1
+        fi
+
+        # 3. 检测架构
+        TARGET_ARCH=$(grep CONFIG_TARGET_ARCH openwrt/.config | cut -d= -f2 | tr -d '"')
+        if [ -z "$TARGET_ARCH" ]; then
+          echo "❌ 无法读取 .config 中的架构信息！"
+          exit 1
+        fi
+        echo "📌 原始架构: $TARGET_ARCH"
+
+        # 提取通用架构
+        if [[ "$TARGET_ARCH" == aarch64* ]]; then
+          COMMON_ARCH="aarch64"
+        elif [[ "$TARGET_ARCH" == arm* ]]; then
+          COMMON_ARCH="arm"
+        else
+          COMMON_ARCH="$TARGET_ARCH"
+        fi
+        echo "🔄 提取通用架构: $COMMON_ARCH"
+
+        # 映射到 mihomo 架构
+        case "$COMMON_ARCH" in
+          "aarch64") MIHOMO_ARCH="arm64" ;;
+          "arm")     MIHOMO_ARCH="armv7" ;;
+          "x86_64")  MIHOMO_ARCH="amd64" ;;
+          "i386")    MIHOMO_ARCH="386" ;;
+          *)         echo "❌ 不支持的架构: $COMMON_ARCH"; exit 1 ;;
+        esac
+        echo "✅ 映射为 Mihomo 架构: $MIHOMO_ARCH"
+
+        # 仅允许 arm64
+        if [ "$MIHOMO_ARCH" != "arm64" ]; then
+          echo "❌ 当前架构 ($MIHOMO_ARCH) 不受支持！本项目仅允许 arm64。"
+          exit 1
+        fi
+
+        # 4. 获取 Release 资产 URL
+        echo "🌐 获取 GitHub Release 信息..."
+        ASSET_URL=$(curl -s --fail "https://api.github.com/repos/$MIHOMO_REPO/releases/tags/$RELEASE_TAG" | \
+          jq -r '.assets[].browser_download_url' | \
+          grep -i "linux-$MIHOMO_ARCH" | \
+          grep -i "alpha" | \
+          grep -i "\.gz$" | \
+          head -n1)
+
+        if [ -z "$ASSET_URL" ]; then
+          echo "❌ 未找到 mihomo-linux-$MIHOMO_ARCH-alpha*.gz 文件！"
+          echo "💡 可能原因：网络问题、API 限流、版本未发布"
+          exit 1
+        fi
+        echo "✅ 找到匹配内核: $ASSET_URL"
+
+        # 5. 下载
+        echo "📥 开始下载 mihomo 内核..."
+        wget -O /tmp/mihomo.gz --no-check-certificate --timeout=$TIMEOUT --tries=3 "$ASSET_URL" || {
+          echo "❌ 下载失败，请检查网络"
+          exit 1
+        }
+
+        # 6. 解压
+        gunzip /tmp/mihomo.gz || {
+          echo "❌ 解压失败，请检查文件完整性"
+          rm -f /tmp/mihomo.gz
+          exit 1
+        }
+
+        # 7. 移动并设置权限（✅ 使用绝对路径 + ✅ 检查失败）
+        mv /tmp/mihomo "$FULL_TARGET_FILE" || {
+          echo "❌ 移动文件失败！目标路径: $FULL_TARGET_FILE"
+          echo "📁 检查父目录:"
+          ls -la "$ROOT_DIR/openwrt/files/etc/openclash/" || echo "❌ 目录不存在"
+          exit 1
+        }
+        chmod +x "$FULL_TARGET_FILE"
+
+        # 8. 校验文件类型
+        echo "🧪 校验内核文件类型..."
+        FILE_INFO=$(file "$FULL_TARGET_FILE")
+        if echo "$FILE_INFO" | grep -q "aarch64"; then
+          echo "✅ 成功！文件为 64 位 ARM 架构："
+          echo "   $FILE_INFO"
+        else
+          echo "❌ 失败！文件不是 aarch64 架构！"
+          echo "📄 file 输出: $FILE_INFO"
+          rm -f "$FULL_TARGET_FILE"
+          exit 1
+        fi
+
+        # 9. 输出版本信息
+        echo "📋 Mihomo 版本信息:"
+        "$FULL_TARGET_FILE" -v || echo "⚠️ 无法运行 -v（可能静态限制）"
+
+        echo "🎉 Mihomo 内核安装与验证完成！"
+
+    - name: SSH connection to Actions
+      uses: P3TERX/ssh2actions@v1.0.0
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh != 'false') || contains(github.event.action, 'ssh')
+      env:
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
     - name: Download package
       id: package
@@ -121,109 +241,28 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Compile the firmware
-      id: compile
+    - name: 编译固件
       run: |
         cd openwrt
-        echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
-        echo "status=success" >> $GITHUB_OUTPUT
-        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
-        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
-        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+        make -j$(nproc)
+        echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
-    - name: Check space usage
-      if: (!cancelled())
-      run: df -hT
-
-    - name: Upload bin directory
-      uses: actions/upload-artifact@main
-      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+    - name: 上传输出文件
+      uses: actions/upload-artifact@v4
+      if: env.UPLOAD_OUTPUT == 'true' && !cancelled()
       with:
-        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        name: ${{ env.DEVICE }}--${{ env.FILE_DATE }}
         path: openwrt/bin
 
-    - name: Organize files
-      id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+    - name: 整理输出文件
       run: |
         cd openwrt/bin/targets/*/*
         rm -rf packages
-        rm -rf config.buildinfo
-        rm -rf feeds.buildinfo
-        rm -rf sha256sums
-        rm -rf version.buildinfo
-        rm -rf profiles.json
-        rm -rf *.manifest
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: Upload firmware directory
-      uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
+    - name: 发布固件至 Release
+      uses: ncipollo/release-action@v1
       with:
-        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: ${{ env.FIRMWARE }}
-
-    - name: Upload firmware to cowtransfer
-      id: cowtransfer
-      if: steps.organize.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
-      run: |
-        curl -fsSL git.io/file-transfer | sh
-        ./transfer cow --block 2621440 -s -p 64 --no-progress ${FIRMWARE} 2>&1 | tee cowtransfer.log
-        echo "::warning file=cowtransfer.com::$(cat cowtransfer.log | grep https)"
-        echo "url=$(cat cowtransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_OUTPUT
-
-    - name: Upload firmware to WeTransfer
-      id: wetransfer
-      if: steps.organize.outputs.status == 'success' && env.UPLOAD_WETRANSFER == 'true' && !cancelled()
-      run: |
-        curl -fsSL git.io/file-transfer | sh
-        ./transfer wet -s -p 16 --no-progress ${FIRMWARE} 2>&1 | tee wetransfer.log
-        echo "::warning file=wetransfer.com::$(cat wetransfer.log | grep https)"
-        echo "url=$(cat wetransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_OUTPUT
-
-    - name: Generate release tag
-      id: tag
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
-        touch release.txt
-        [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
-        [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
-        echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: Upload firmware to release
-      uses: softprops/action-gh-release@v2
-      if: steps.tag.outputs.status == 'success' && !cancelled()
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        body_path: release.txt
-        files: ${{ env.FIRMWARE }}/*
-
-    - name: Remove old artifacts
-      uses: c-hive/gha-remove-artifacts@v1
-      with:
-        age: '15 days' # '<number> <unit>', e.g. 5 days, 2 years, 90 seconds, parsed by Moment.js
-        # Optional inputs
-        # skip-tags: true
-        # skip-recent: 5 
-
-    - name: Delete workflow runs
-      uses: Mattraks/delete-workflow-runs@main
-      with:
-        token: ${{ github.token }}
-        repository: ${{ github.repository }}
-        retain_days: 1
-        keep_minimum_runs: 1
-
-    - name: Remove old Releases
-      uses: dev-drprasad/delete-older-releases@v0.3.4
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      with:
-        keep_latest: 6
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        tag: "${{ env.DEVICE }}--${{ env.FILE_DATE }}"
+        artifacts: "openwrt/bin/targets/*/*/*"
+        body: |
+          # 未测试×
