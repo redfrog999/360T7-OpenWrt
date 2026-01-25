@@ -1,3 +1,4 @@
+#
 # Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
 #
 # This is free software, licensed under the MIT License.
@@ -5,10 +6,18 @@
 #
 # https://github.com/P3TERX/Actions-OpenWrt
 # Description: Build OpenWrt using GitHub Actions
+#
 
 name: OpenWrt 360T7 Openwrt-24.10-6.6-NoLLVM
 
 on:
+  # schedule:
+    # - cron: 2 */4 * * *
+  push:
+    tags:
+    - 'v*'
+  watch:
+    types: [started]
   repository_dispatch:
   workflow_dispatch:
     inputs:
@@ -20,95 +29,113 @@ on:
 env:
   REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x-6.6.git
   REPO_BRANCH: openwrt-24.10-6.6
+  DEVICE_NAME: 360t7-Padavanonly
+  FILES: immortalwrt/files
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: immortalwrt/.config.360T7-Openwrt-24.10-6.6.bak
   DIY_P1_SH: immortalwrt/diy-part1.sh
   DIY_P2_SH: immortalwrt/diy-part2-T7.2305.sh
+  UPLOAD_BIN_DIR: false
+  UPLOAD_FIRMWARE: true
+  UPLOAD_COWTRANSFER: false
+  UPLOAD_WSSRANSFER: false
+  UPLOAD_RELEASE: false
+  SERVERCHAN_SCKEY: false
   TZ: Asia/Shanghai
-  DEVICE: 360t7-Padavanonly
-  UPLOAD_OUTPUT: true
-  # OpenClash 配置（可选，当前由脚本自动检测）
-  CLASH_VERSION: latest
-  CLASH_CORE_DIR: openwrt/files/etc/openclash/core
 
 jobs:
-  _360t7_padavanonly:
+  build:
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
 
     steps:
-    - name: Checkout Repository (your repo with patches, config, scripts)
-      uses: actions/checkout@main
+    
+    - name: Free Disk Space
+      uses: endersonmenezes/free-disk-space@main
       with:
-        path: repo
+        remove_android: true
+        remove_dotnet: true
+        remove_haskell: true
+        remove_tool_cache: true
+        remove_swap: true
+        remove_packages: "android* azure* clang* dotnet* firefox* ghc* golang* google* libclang* libgl1* lld* llvm* \
+          microsoft* mongodb* mono* mysql* nodejs* openjdk* php* postgresql* powershell* snap* temurin* yarn* zulu*"
+        remove_packages_one_command: true
+        remove_folders: "/etc/apt/sources.list.d* /etc/mono* /etc/mysql* /usr/include/linux/android* /usr/lib/llvm* /usr/lib/mono* \
+          /usr/local/lib/android* /usr/local/lib/node_modules* /usr/local/share/chromium* /usr/local/share/powershell* \
+          /usr/local/share/vcpkg/ports/azure* /usr/local/share/vcpkg/ports/google* /usr/local/share/vcpkg/ports/libpq/android* \
+          /usr/local/share/vcpkg/ports/llvm* /usr/local/share/vcpkg/ports/mysql* /usr/local/share/vcpkg/ports/snap* \
+          /usr/share/azure* /usr/share/dotnet* /usr/share/glade* /usr/share/miniconda* /usr/share/php* /usr/share/swift \
+          /var/lib/mysql* /var/log/azure*"
+        testing: false
+        
+    - name: Checkout
+      uses: actions/checkout@v3
 
-    - name: 检查服务器配置
-      if: (!cancelled())
+    - name: Check server performance
       run: |
-        echo "警告⚠"
+        echo "警告！"
         echo "若分配的服务器性能不足，务必及时取消，重新运行！"
         echo "已知编译成功CPU型号：8370C,8171M"
-        echo "已知性能不足CPU型号：8272CL,E5系列"
-        echo "--------------------------CPU信息--------------------------"
+        echo "已知性能不足CPU型号：8272CL"
+        echo -e "-------------- ------------CPU信息------------------------------------------\n"
         echo "CPU物理数量:$(cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l)"
         echo -e "CPU核心及版本信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
-        echo "--------------------------内存信息--------------------------"
+        echo "-------------------------------内存信息-------------------------------------------"
         echo "已安装内存详细信息："
         sudo lshw -short -C memory | grep GiB
         echo -e "\n"
-        echo "--------------------------硬盘信息--------------------------"
+        echo "-----------------------------硬盘信息---------------------------------------------"
         echo -e  "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
         echo "硬盘详情："
         df -Th
-
+        
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
-        sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)' jq file  patchelf
+        #sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.eu.org/init_build_environment.sh)'
+        sudo -E apt-get -qq install $(curl -fsSL https://raw.githubusercontent.com/mitsukileung/Actions-OpenWrt/main/depends-ubuntu-2004)
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
-        sudo mkdir -p /mnt/workdir
-        sudo chown $USER:$GROUPS /mnt/workdir
-
-    - name: Clone OpenWrt Source
-      working-directory: /mnt/workdir
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
+        
+    - name: Clone source code
+      working-directory: /workdir
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /mnt/workdir/openwrt $GITHUB_WORKSPACE/openwrt
-
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        
     - name: Load custom feeds
       run: |
-        [ -e repo/$FEEDS_CONF ] && mv repo/$FEEDS_CONF openwrt/feeds.conf.default
-        [ -e repo/$DIY_P1_SH ] && chmod +x repo/$DIY_P1_SH
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
         cd openwrt
-        $GITHUB_WORKSPACE/repo/$DIY_P1_SH
-
+        $GITHUB_WORKSPACE/$DIY_P1_SH
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
     - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a -f
-
-    #- name: Replace libxcrypt Makefile with custom version
-     # run: |
-      #  cp repo/custom-files/libxcrypt-Makefile openwrt/feeds/packages/libs/libxcrypt/Makefile
-       # echo "✅ Custom Makefile applied!"
-        #ls -l openwrt/feeds/packages/libs/libxcrypt/Makefile
+      run: cd openwrt && ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
-        [ -e repo/files ] && mv repo/files openwrt/files
-        [ -e repo/$CONFIG_FILE ] && mv repo/$CONFIG_FILE openwrt/.config
-        [ -e repo/$DIY_P3_SH ] && chmod +x repo/$DIY_P2_SH
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
         cd openwrt
-        $GITHUB_WORKSPACE/repo/$DIY_P2_SH
-
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+    - name: SSH connection to Actions
+      uses: P3TERX/ssh2actions@v1.0.0
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+      env:
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        
     - name: Auto-Detect & Download Mihomo (arm64) with Validation
       run: |
         # ==================== 配置区 ====================
@@ -223,14 +250,7 @@ jobs:
         echo "📋 Mihomo 版本信息:"
         "$FULL_TARGET_FILE" -v || echo "⚠️ 无法运行 -v（可能静态限制）"
 
-        echo "🎉 Mihomo 内核安装与验证完成！"
-
-    - name: SSH connection to Actions
-      uses: P3TERX/ssh2actions@v1.0.0
-      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh != 'false') || contains(github.event.action, 'ssh')
-      env:
-        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        echo "🎉 Mihomo 内核安装与验证完成！"         
 
     - name: Download package
       id: package
@@ -240,29 +260,91 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-
-    - name: 编译固件
+    - name: Compile the firmware
+      id: compile
       run: |
         cd openwrt
-        make -j$(nproc)
-        echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 || make -j1 V=s
+        echo "status=success" >> $GITHUB_OUTPUT
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+    - name: Check space usage
+      if: (!cancelled())
+      run: df -hT
 
-    - name: 上传输出文件
-      uses: actions/upload-artifact@v4
-      if: env.UPLOAD_OUTPUT == 'true' && !cancelled()
+    - name: Upload bin directory
+      uses: actions/upload-artifact@main
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
-        name: ${{ env.DEVICE }}--${{ env.FILE_DATE }}
+        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin
 
-    - name: 整理输出文件
+    - name: Organize files
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
         cd openwrt/bin/targets/*/*
         rm -rf packages
-
-    - name: 发布固件至 Release
-      uses: ncipollo/release-action@v1
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+    - name: Upload firmware directory
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        tag: "${{ env.DEVICE }}--${{ env.FILE_DATE }}"
-        artifacts: "openwrt/bin/targets/*/*/*"
-        body: |
-          # 未测试×
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+
+    - name: Upload firmware to cowtransfer
+      id: cowtransfer
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
+      run: |
+        curl -fsSL git.io/file-transfer | sh
+        ./transfer cow --block 2621440 -s -p 64 --no-progress ${FIRMWARE} 2>&1 | tee cowtransfer.log
+        echo "::warning file=cowtransfer.com::$(cat cowtransfer.log | grep https)"
+        echo "url=$(cat cowtransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_OUTPUT
+        
+    - name: Upload firmware to Wenshushu
+      id: Wenshushu
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_WSSRANSFER == 'true' && !cancelled()
+      run: |
+        curl -fsSL git.io/file-transfer | sh
+        ./transfer wss -s -p 16 --no-progress ${FIRMWARE} 2>&1 | tee wssransfer.log
+        echo "::warning file=wssransfer.com::$(cat wssransfer.log | grep https)"
+        echo "url=$(cat wssransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_OUTPUT
+        
+    - name: Generate release tag
+      id: tag
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      run: |
+        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        touch release.txt
+        [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
+        [ $UPLOAD_WSSRANSFER = true ] && echo "🔗 [Wssransfer](${{ steps.wssransfer.outputs.url }})" >> release.txt
+        echo "status=success" >> $GITHUB_OUTPUT
+        
+    - name: Upload firmware to release
+      uses: softprops/action-gh-release@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
+
+    - name: Delete workflow runs
+      uses: mitsukileung/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 3
+
+    - name: Remove old Releases
+      uses: dev-drprasad/delete-older-releases@v0.2.1
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      with:
+        keep_latest: 3
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
