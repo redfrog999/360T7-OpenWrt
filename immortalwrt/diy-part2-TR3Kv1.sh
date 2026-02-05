@@ -81,7 +81,10 @@ git clone https://github.com/sirpdboy/luci-app-lucky package/lucky-packages
 git clone https://github.com/lwb1978/openwrt-gecoosac package/openwrt-gecoosac
 # git clone -b v1.0 https://github.com/lwb1978/openwrt-gecoosac package/openwrt-gecoosac
 
-#临时解决Rust问题
+# 強制給予 uci-defaults 腳本執行權限，防止雲端編譯權限丟失
+chmod +x files/etc/uci-defaults/99-physical-sovereignty
+
+# 临时解决Rust问题
 sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile
 
 # 添加主题
