@@ -35,7 +35,10 @@ sed -i '/<br \/>/d' feeds/luci/modules/luci-compat/luasrc/view/cbi/full_valuefoo
 # 修复procps-ng-top导致首页cpu使用率无法获取
 sed -i 's#top -n1#\/bin\/busybox top -n1#g' feeds/luci/modules/luci-base/root/usr/share/rpcd/ucode/luci
 
-#临时解决Rust问题
+# 強制給予 uci-defaults 腳本執行權限，防止雲端編譯權限丟失
+chmod +x files/etc/uci-defaults/99-physical-sovereignty
+
+# 临时解决Rust问题
 sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile
 
 # ------------------PassWall 科学上网--------------------------
