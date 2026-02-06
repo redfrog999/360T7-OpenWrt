@@ -228,6 +228,23 @@ find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang
 find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHREPO/PKG_SOURCE_URL:=https:\/\/github.com/g' {}
 find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHCODELOAD/PKG_SOURCE_URL:=https:\/\/codeload.github.com/g' {}
 
+# --- 1. 注入 CachyOS 风格的全局硬件加速编译参数 ---
+# 我们直接修改 include/target.mk 里的默认 CFLAGS
+# 加上 -march=armv8-a+crc+crypto，唤醒 A53 的硬件加密引擎
+sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' include/target.mk
+
+# --- 2. 强制开启硬件加速内核模块的默认勾选 ---
+# 虽然 menuconfig 也能选，但写在脚本里能防止你漏掉依赖
+echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config.360T7-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config.360T7-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config.360T7-Openwrt-24.10-6.6.bak
+
+# --- 3. 顺手解决你心心念念的 zramctl 依赖 ---
+# 强制开启 util-linux 核心库，确保 zramctl 这次能“出丹”
+echo "CONFIG_PACKAGE_libsmartcols=y" >> .config.360T7-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_libblkid=y" >> .config.360T7-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_util-linux-zramctl=y" >> .config.360T7-Openwrt-24.10-6.6.bak
+
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
