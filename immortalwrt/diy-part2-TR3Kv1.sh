@@ -186,6 +186,36 @@ find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang
 find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHREPO/PKG_SOURCE_URL:=https:\/\/github.com/g' {}
 find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHCODELOAD/PKG_SOURCE_URL:=https:\/\/codeload.github.com/g' {}
 
+# --- 1. 注入 CachyOS 风格的全局硬件加速编译参数 ---
+# 我们直接修改 include/target.mk 里的默认 CFLAGS
+# 加上 -march=armv8-a+crc+crypto，唤醒 A53 的硬件加密引擎
+sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' include/target.mk
+
+# --- 2. 强制开启硬件加速内核模块的默认勾选 ---
+# 虽然 menuconfig 也能选，但写在脚本里能防止你漏掉依赖
+echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+
+# --- 3. 顺手解决你心心念念的 zramctl 依赖 ---
+# 强制开启 util-linux 核心库，确保 zramctl 这次能“出丹”
+echo "CONFIG_PACKAGE_libsmartcols=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_libblkid=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_util-linux-zramctl=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+
+# --- 物理主权：MT7981 1.6GHz 频率释放 ---
+
+# 1. 修改设备树，将默认频率改为 1.6G (1600MHz)
+# 针对大部分 MT7981 源码结构，直接替换频率定义
+find target/linux/mediatek/files-5.4/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1600000/g' 2>/dev/null
+
+# 2. 强制开启内核的 CPU 频率调节器并锁定高性能模式
+echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+
+# 3. 释放内核编译时的指令优化限制
+sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
+
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
