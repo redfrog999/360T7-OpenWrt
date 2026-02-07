@@ -46,10 +46,6 @@ git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-
 rm -rf feeds/luci/applications/luci-app-passwall2
 git clone https://github.com/Openwrt-Passwall/openwrt-passwall2 package/luci-app-passwall2
 
-# Momo
-rm -rf feeds/luci/applications/luci-app-momo
-git clone https://github.com/nikkinikki-org/OpenWrt-momo package/luci-app-momo
-
 # 优化socat中英翻译
 sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat.po
 
@@ -97,7 +93,7 @@ git clone --depth=1 -b master https://github.com/NicolasMe9907/luci-theme-kucat 
 git clone --depth=1 -b main https://github.com/NicolasMe9907/luci-app-advancedplus  package/luci-app-advancedplus
 
 git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora package/luci-theme-aurora
-echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config
 
 # 取消自添加主题的默认设置
 find package/luci-theme-*/* -type f -print | grep '/root/etc/uci-defaults/' | while IFS= read -r file; do
@@ -206,15 +202,9 @@ sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' inc
 
 # --- 2. 强制开启硬件加速内核模块的默认勾选 ---
 # 虽然 menuconfig 也能选，但写在脚本里能防止你漏掉依赖
-echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
-
-# --- 3. 顺手解决你心心念念的 zramctl 依赖 ---
-# 强制开启 util-linux 核心库，确保 zramctl 这次能“出丹”
-echo "CONFIG_PACKAGE_libsmartcols=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_libblkid=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_util-linux-zramctl=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config
+echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config
+echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config
 
 # --- 物理主权：MT7981 1.6GHz 频率释放 ---
 
@@ -224,7 +214,7 @@ find target/linux/mediatek/files-5.4/arch/arm64/boot/dts/mediatek/ -name "*.dts*
 
 # 2. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
-echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config.TR3Kv1-Openwrt-24.10-6.6.bak
+echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
 
 # 3. 释放内核编译时的指令优化限制
 sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
