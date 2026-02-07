@@ -107,7 +107,7 @@ git clone --depth=1 -b master https://github.com/NicolasMe9907/luci-theme-kucat 
 git clone --depth=1 -b main https://github.com/NicolasMe9907/luci-app-advancedplus  package/luci-app-advancedplus
 
 git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora package/luci-theme-aurora
-echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config.360T7-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config
 
 # 设置默认主题
 default_theme='aurora'
@@ -238,15 +238,9 @@ sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' inc
 
 # --- 2. 强制开启硬件加速内核模块的默认勾选 ---
 # 虽然 menuconfig 也能选，但写在脚本里能防止你漏掉依赖
-echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config.360T7-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config.360T7-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config.360T7-Openwrt-24.10-6.6.bak
-
-# --- 3. 顺手解决你心心念念的 zramctl 依赖 ---
-# 强制开启 util-linux 核心库，确保 zramctl 这次能“出丹”
-echo "CONFIG_PACKAGE_libsmartcols=y" >> .config.360T7-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_libblkid=y" >> .config.360T7-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_util-linux-zramctl=y" >> .config.360T7-Openwrt-24.10-6.6.bak
+echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config
+echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config
+echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config.
 
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
