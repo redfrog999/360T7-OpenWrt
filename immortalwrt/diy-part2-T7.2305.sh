@@ -109,11 +109,6 @@ git clone --depth=1 -b main https://github.com/NicolasMe9907/luci-app-advancedpl
 git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora package/luci-theme-aurora
 echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config.360T7-Openwrt-24.10-6.6.bak
 
-# 取消自添加主题的默认设置
-find package/luci-theme-*/* -type f -print | grep '/root/etc/uci-defaults/' | while IFS= read -r file; do
-	sed -i '/set luci.main.mediaurlbase/d' "$file"
-done
-
 # 设置默认主题
 default_theme='aurora'
 sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/config/luci
