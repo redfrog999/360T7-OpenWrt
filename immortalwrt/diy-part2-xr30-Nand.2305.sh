@@ -106,22 +106,25 @@ git clone --depth=1 -b master https://github.com/NicolasMe9907/luci-theme-kucat 
 #git clone --depth=1 -b main https://github.com/sirpdboy/luci-app-advancedplus  package/luci-app-advancedplus
 git clone --depth=1 -b main https://github.com/NicolasMe9907/luci-app-advancedplus  package/luci-app-advancedplus
 
+git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora package/luci-theme-aurora
+echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
+
 # 取消自添加主题的默认设置
 find package/luci-theme-*/* -type f -print | grep '/root/etc/uci-defaults/' | while IFS= read -r file; do
 	sed -i '/set luci.main.mediaurlbase/d' "$file"
 done
 
 # 设置默认主题
-default_theme='argon'
+default_theme='aurora'
 sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/config/luci
 
 # unzip
 rm -rf feeds/packages/utils/unzip
 git clone https://github.com/sbwml/feeds_packages_utils_unzip feeds/packages/utils/unzip
 
-# golang 1.25
+# golang 1.26
 rm -rf feeds/packages/lang/golang
-git clone --depth=1 https://github.com/sbwml/packages_lang_golang -b 25.x feeds/packages/lang/golang
+git clone --depth=1 https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
 
 # luci-app-filemanager
 rm -rf feeds/luci/applications/luci-app-filemanager
