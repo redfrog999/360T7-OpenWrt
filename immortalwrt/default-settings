@@ -28,20 +28,20 @@ fw_iptv_id=$(uci show firewall | grep 'Allow-IPTV-igmpproxy' | grep -oE '\[.*?\]
 }
 
 # 添加防火墙自定义规则
-# fw_user_id=$(uci show firewall | grep '/etc/firewall4.user' | grep -oE '\[.*?\]' | sed 's/[][]//g')
-# [ -z "${fw_user_id}" ] && {
-# 	uci add firewall include
-# 	uci set firewall.@include[-1].enabled=1
-# 	uci set firewall.@include[-1].type='script'
-# 	uci set firewall.@include[-1].path='/etc/firewall4.user'
-# 	uci set firewall.@include[-1].fw4_compatible=1
-# 	uci commit firewall
-# }
+fw_user_id=$(uci show firewall | grep '/etc/firewall4.user' | grep -oE '\[.*?\]' | sed 's/[][]//g')
+[ -z "${fw_user_id}" ] && {
+	uci add firewall include
+	uci set firewall.@include[-1].enabled=1
+	uci set firewall.@include[-1].type='script'
+	uci set firewall.@include[-1].path='/etc/firewall4.user'
+	uci set firewall.@include[-1].fw4_compatible=1
+	uci commit firewall
+}
 touch /etc/firewall4.user
 
 # 设置ttyd免帐号登录
-# uci set ttyd.@ttyd[0].command='/bin/login -f root'
-# uci commit ttyd
+uci set ttyd.@ttyd[0].command='/bin/login -f root'
+uci commit ttyd
 
 # shell解释器换成bash、修改profile
 if [ -f /bin/bash ]; then
