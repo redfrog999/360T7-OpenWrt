@@ -8,7 +8,7 @@ on:
     inputs:
       ssh:
         description: 'SSH connection to Actions'
-        required: true
+        required: false
         default: 'true'
 
 env:
