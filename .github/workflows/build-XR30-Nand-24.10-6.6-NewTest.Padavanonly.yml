@@ -72,8 +72,8 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: SSH connection to Actions
-      uses: mxschmitt/action-tmate@v3
+    #- name: SSH connection to Actions
+      #uses: mxschmitt/action-tmate@v3
 
     - name: 组织配置文件
       run: |
