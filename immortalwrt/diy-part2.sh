@@ -19,24 +19,8 @@ source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 # 默认IP由1.1修改为15.1
 sed -i 's/192.168.1.1/192.168.15.1/g' package/base-files/files/bin/config_generate
 
-# ---------------------------------------------------------
-# 物理獵人：Cargo 包管理器重定向
-# ---------------------------------------------------------
-echo "Configuring Cargo mirror..."
-mkdir -p ~/.cargo
-cat <<EOF > ~/.cargo/config
-[source.crates-io]
-replace-with = 'ustc'
-
-[source.ustc]
-registry = "git://mirrors.ustc.edu.cn/crates.io-index"
-EOF
-
-# 如果有自定義主題或特定插件，在這裡繼續執行你的原代碼
-# 例如：git clone ... package/lean/luci-theme-argon
-
 # 最大连接数修改为65535
-sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' package/base-files/files/etc/sysctl.conf
+# sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' package/base-files/files/etc/sysctl.conf
 
 # luci-compat - 修复上移下移按钮翻译
 sed -i 's/<%:Up%>/<%:Move up%>/g' feeds/luci/modules/luci-compat/luasrc/view/cbi/tblsection.htm
@@ -49,7 +33,7 @@ sed -i '/<br \/>/d' feeds/luci/modules/luci-compat/luasrc/view/cbi/full_valuefoo
 chmod +x files/etc/uci-defaults/99-physical-sovereignty
 
 # 临时解决Rust问题
-sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile
+# sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile
 
 # ------------------PassWall 科学上网--------------------------
 # 移除 openwrt feeds 自带的核心库
