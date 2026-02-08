@@ -33,5 +33,17 @@ if [ -n "$VERSION_TEXT" ]; then
 	sed -i "/^VERSION_NUMBER:=.*SNAPSHOT/s/SNAPSHOT/${VERSION_TEXT}/" include/version.mk
 fi
 
+#!/bin/bash
+# ---------------------------------------------------------
+# 物理獵人：Rust 環境變量加速 (中科大源)
+# ---------------------------------------------------------
+echo "Setting up Rust mirror..."
+# 寫入環境變量到 GitHub Action 全局環境
+echo "RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static" >> $GITHUB_ENV
+echo "RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup" >> $GITHUB_ENV
+
+# 物理修改 OpenWrt 下載源優先級 (將中科大源插到最前面)
+sed -i 's/https:\/\/sources.openwrt.org/https:\/\/mirrors.ustc.edu.cn\/openwrt\/sources/g' include/download.mk
+
 echo "========================="
 echo " DIY1 配置完成……"
