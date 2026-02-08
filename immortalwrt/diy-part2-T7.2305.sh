@@ -19,6 +19,23 @@ source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 # 修改x86内核到6.6版
 # sed -i 's/KERNEL_PATCHVER:=.*/KERNEL_PATCHVER:=6.6/g' ./target/linux/x86/Makefile
 
+#!/bin/bash
+# ---------------------------------------------------------
+# 物理獵人：Cargo 包管理器重定向
+# ---------------------------------------------------------
+echo "Configuring Cargo mirror..."
+mkdir -p ~/.cargo
+cat <<EOF > ~/.cargo/config
+[source.crates-io]
+replace-with = 'ustc'
+
+[source.ustc]
+registry = "git://mirrors.ustc.edu.cn/crates.io-index"
+EOF
+
+# 如果有自定義主題或特定插件，在這裡繼續執行你的原代碼
+# 例如：git clone ... package/lean/luci-theme-argon
+
 # 默认IP由1.1修改为6.1
 sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generate
 
