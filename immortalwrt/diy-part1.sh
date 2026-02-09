@@ -27,7 +27,7 @@ echo "========================="
 # svn export https://github.com/padavanonly/immortalwrt/trunk/target/linux/ramips target/linux/ramips
 
 # 在 diy-part1.sh 中加入
-sed -i 's/src-git packages https:\/\/github.com\/immortalwrt\/packages.git;master/src-git packages https:\/\/github.com\/immortalwrt\/packages.git/g' feeds.conf.default
+# sed -i 's/src-git packages https:\/\/github.com\/immortalwrt\/packages.git;master/src-git packages https:\/\/github.com\/immortalwrt\/packages.git/g' feeds.conf.default
 
 # 修改系统版本（界面显示）
 VERSION=${GITHUB_WORKSPACE}/immortalwrt/version
