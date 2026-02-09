@@ -94,6 +94,8 @@ jobs:
         input_branch="${{ github.event.inputs.repo_branch }}"
         if [ -z "$input_branch" ] || [ "$input_branch" = "master" ]; then
           branch="master"
+          elif [[ "$input_branch" == openwrt-* ]]; then
+          branch="$input_branch" 
         else
           branch="openwrt-$input_branch"
         fi
