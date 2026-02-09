@@ -1,7 +1,7 @@
 # Description: 此脚本基于 P3TERX 的 Actions-OpenWrt 仓库修改而来。
 # 用于生成config配置文件
 
-name: MakeCfg-3KMe-Padavanonly-6.6
+name: MakeCfg-TR3Kv1-Padavanonly-6.6
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ env:
   REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x-6.6.git
   REPO_BRANCH: openwrt-24.10-6.6
   FEEDS_CONF: immortalwrt/feeds.conf.default
-  DEVICE_NAME: RAX3000M-eMMC
+  DEVICE_NAME: TR3000v1
   FILES: immortalwrt/files
   CONFIG_FILE: immortalwrt/config.TR3Kv1-Openwrt-24.10-6.6.bak
   DIY_P1_SH: immortalwrt/diy-part1-TR3Kv1.sh
