@@ -29,7 +29,7 @@ sed -i '1i src-git kenzo https://github.com/redfrog999/openwrt-packages' feeds.c
 # svn export https://github.com/padavanonly/immortalwrt/trunk/target/linux/ramips target/linux/ramips
 
 # 在 diy-part1.sh 中加入
-sed -i 's/src-git packages https:\/\/github.com\/immortalwrt\/packages.git;master/src-git packages https:\/\/github.com\/immortalwrt\/packages.git/g' feeds.conf.default
+# sed -i 's/src-git packages https:\/\/github.com\/immortalwrt\/packages.git;master/src-git packages https:\/\/github.com\/immortalwrt\/packages.git/g' feeds.conf.default
 
 # 修改系统版本（界面显示）
 VERSION=${GITHUB_WORKSPACE}/immortalwrt/version
@@ -37,17 +37,5 @@ VERSION_TEXT=$(head -n 1 ${VERSION} | tr -d ' \r\n')
 if [ -n "$VERSION_TEXT" ]; then
 	sed -i "/^VERSION_NUMBER:=.*SNAPSHOT/s/SNAPSHOT/${VERSION_TEXT}/" include/version.mk
 fi
-
-#!/bin/bash
-# ---------------------------------------------------------
-# 物理獵人：Rust 環境變量加速 (中科大源)
-# ---------------------------------------------------------
-echo "Setting up Rust mirror..."
-# 寫入環境變量到 GitHub Action 全局環境
-echo "RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static" >> $GITHUB_ENV
-echo "RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup" >> $GITHUB_ENV
-
-# 物理修改 OpenWrt 下載源優先級 (將中科大源插到最前面)
-sed -i 's/https:\/\/sources.openwrt.org/https:\/\/mirrors.ustc.edu.cn\/openwrt\/sources/g' include/download.mk
 echo "========================="
 echo " DIY1 配置完成……"
