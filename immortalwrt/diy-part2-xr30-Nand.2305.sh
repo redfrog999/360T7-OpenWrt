@@ -248,12 +248,6 @@ echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config.XR30-Nand-Openwrt-24.
 echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
 echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
 
-# --- 3. 顺手解决你心心念念的 zramctl 依赖 ---
-# 强制开启 util-linux 核心库，确保 zramctl 这次能“出丹”
-echo "CONFIG_PACKAGE_libsmartcols=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_libblkid=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
-echo "CONFIG_PACKAGE_util-linux-zramctl=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
-
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
