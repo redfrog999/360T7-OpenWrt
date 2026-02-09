@@ -11,7 +11,7 @@ on:
       repo_branch:
         description: 'Select the source code branch (e.g. 24.10 for openwrt-24.10)'
         required: false
-        default: master
+        default: openwrt-24.10-6.6
 #  schedule:
 #    - cron: 0 8 * * 5
 
