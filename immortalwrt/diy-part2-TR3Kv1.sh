@@ -217,7 +217,7 @@ echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config
 # echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
 
 # 3. 释放内核编译时的指令优化限制
-sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
+# sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
 
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
