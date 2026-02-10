@@ -240,9 +240,12 @@ sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' inc
 # 虽然 menuconfig 也能选，但写在脚本里能防止你漏掉依赖
 echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config
 echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config
-echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config
+echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config.
 
-# ---3. 强制开启内核的 CPU 频率调节器并锁定高性能模式
+# ---3. 释放内核编译时的指令优化限制
+sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
+
+# ---4. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
 echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
 

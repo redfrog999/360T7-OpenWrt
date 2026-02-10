@@ -210,14 +210,14 @@ echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config
 
 # 1. 修改设备树，将默认频率改为 1.6G (1600MHz)
 # 针对大部分 MT7981 源码结构，直接替换频率定义
-# find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1600000/g' 2>/dev/null
+find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1600000/g' 2>/dev/null
 
 # 2. 强制开启内核的 CPU 频率调节器并锁定高性能模式
-# echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
-# echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
+echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
+echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
 
 # 3. 释放内核编译时的指令优化限制
-# sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
+sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
 
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings

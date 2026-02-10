@@ -248,7 +248,10 @@ echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config.XR30-Nand-Openwrt-24.
 echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
 echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
 
-# ---3. 强制开启内核的 CPU 频率调节器并锁定高性能模式
+# ---3. 释放内核编译时的指令优化限制
+sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
+
+# ---4. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
 echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
 
