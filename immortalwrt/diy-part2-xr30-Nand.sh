@@ -36,10 +36,7 @@ sed -i '/<br \/>/d' feeds/luci/modules/luci-compat/luasrc/view/cbi/full_valuefoo
 sed -i 's#top -n1#\/bin\/busybox top -n1#g' feeds/luci/modules/luci-base/root/usr/share/rpcd/ucode/luci
 
 # 強制給予 uci-defaults 腳本執行權限，防止雲端編譯權限丟失
-chmod +x files/etc/uci-defaults/99-physical-sovereignty
-
-# 临时解决Rust问题
-# sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile
+chmod +x files/etc/uci-defaults/99_physical_sovereignty
 
 # ------------------PassWall 科学上网--------------------------
 # 移除 openwrt feeds 自带的核心库
