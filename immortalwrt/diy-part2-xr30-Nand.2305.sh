@@ -248,6 +248,10 @@ echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config.XR30-Nand-Openwrt-24.
 echo "CONFIG_PACKAGE_kmod-crypto-aes=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
 echo "CONFIG_PACKAGE_kmod-crypto-authenc=y" >> .config.XR30-Nand-Openwrt-24.10-6.6.bak
 
+# ---3. 强制开启内核的 CPU 频率调节器并锁定高性能模式
+echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
+echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
+
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
