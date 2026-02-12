@@ -41,27 +41,32 @@ rm -rf feeds/luci/applications/{luci-app-passwall,luci-app-ssr-libev-server}
 # git clone https://github.com/lwb1978/openwrt-passwall package/passwall-luci
 git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
 
-# 强行拉取缺失的 uTLS 依赖定义（sbwml 库里没有这两味药）
-[ ! -d "package/libs/libutls" ] && git clone --depth=1 https://github.com/fw876/helloworld package/temp_hw
-cp -r package/temp_hw/libustls package/libs/ 2>/dev/null
-cp -r package/temp_hw/libutls package/libs/ 2>/dev/null
-rm -rf package/temp_hw
+# --- 1. 搬运药材：拉取缺失的底层依赖源码 ---
+# 从 helloworld 库精准获取 libustls (用于 uTLS 模拟)
+git clone --depth=1 https://github.com/fw876/helloworld package/molun
 
-# 自动寻找 sing-box 的 Makefile 位置
-SB_PATH=$(find package/ -name "Makefile" | grep "sing-box/Makefile" | head -n 1)
+# 从 jerrykuku 库补齐可能缺失的辅助包
+git clone --depth=1 https://github.com/jerrykuku/openwrt-package package/jerrykuku
 
-if [ -n "$SB_PATH" ]; then
-    # 注入 libustls 依赖：这是让 uTLS 真正生效的钥匙
-    sed -i 's/DEPENDS:=.*/& +libustls/g' "$SB_PATH"
+# --- 2. 物理手术：强行给 sbwml 的 sing-box 注入杀招 ---
+# 自动定位 sing-box 的 Makefile 路径 (兼容不同仓库结构)
+SB_MAKEFILE=$(find package/ -name "Makefile" | grep "sing-box/Makefile" | head -n 1)
+
+if [ -f "$SB_MAKEFILE" ]; then
+    # 注入 libustls 依赖：这是让 Sing-box 开启指纹模拟的物理基础
+    # 我们用 sed 把 libustls 强行塞进 DEPENDS 后面
+    sed -i 's/DEPENDS:=.*/& +libustls/g' "$SB_MAKEFILE"
     
-    # 强制开启 with_utls 等核心编译 Tags
-    # 这一步是为了防止 sbwml 的默认配置覆盖了我们的火种
-    sed -i 's/GO_PKG_BUILD_TAGS:=.*/GO_PKG_BUILD_TAGS:=with_utls,with_quic,with_clash_api,with_dhcp,with_wireguard/g' "$SB_PATH"
+    # 注入编译 Tags：强制开启 with_utls
+    # 无论 sbwml 原版写了什么，全部替换为我们定制的满血 Tags
+    sed -i 's/GO_PKG_BUILD_TAGS:=.*/GO_PKG_BUILD_TAGS:=with_utls,with_quic,with_clash_api,with_dhcp,with_wireguard/g' "$SB_MAKEFILE"
 fi
 
-# 物理切除导致卡顿的 afalg-sync 插件
+# --- 3. 彻底清淤：封印导致卡顿的 afalg-sync ---
+# 确保在编译配置中物理切除 sync 插件，防止“气血逆流”
 sed -i 's/CONFIG_PACKAGE_libopenssl-afalg-sync=y/CONFIG_PACKAGE_libopenssl-afalg-sync=n/g' .config
-# 确保标准的 afalg（异步模式）保持开启
+
+# 强制开启标准的异步 afalg 插件，确保 Safexcel 引擎火力全开
 echo "CONFIG_PACKAGE_libopenssl-afalg=y" >> .config
 # ------------------------------------------------------------
 
