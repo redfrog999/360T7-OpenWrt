@@ -5554,7 +5554,7 @@ CONFIG_OPENSSL_WITH_WHIRLPOOL=y
 #
 CONFIG_OPENSSL_ENGINE=y
 # CONFIG_OPENSSL_ENGINE_BUILTIN is not set
-# CONFIG_PACKAGE_libopenssl-afalg is not set
+CONFIG_PACKAGE_libopenssl-afalg=y
 CONFIG_PACKAGE_libopenssl-afalg_sync=y
 
 #
@@ -6070,6 +6070,7 @@ CONFIG_PACKAGE_liburing=y
 # CONFIG_PACKAGE_libusb-1.0 is not set
 # CONFIG_PACKAGE_libusb-compat is not set
 # CONFIG_PACKAGE_libustream-mbedtls is not set
+CONFIG_PACKAGE_libustls=y
 CONFIG_PACKAGE_libustream-openssl=y
 # CONFIG_PACKAGE_libustream-wolfssl is not set
 # CONFIG_PACKAGE_libutp is not set
