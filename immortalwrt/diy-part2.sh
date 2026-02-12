@@ -45,14 +45,27 @@ rm -rf feeds/luci/applications/{luci-app-passwall,luci-app-ssr-libev-server}
 # git clone https://github.com/lwb1978/openwrt-passwall package/passwall-luci
 git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
 
-# 修改 sing-box 的 Makefile，强行注入编译 Tags
-# 这里的逻辑是找到 Makefile 中的编译参数，强制加入 with_utls, with_quic 等
-sed -i 's/GO_PKG_BUILD_TAGS:=/GO_PKG_BUILD_TAGS:=with_utls,with_quic,with_clash_api,with_dhcp,with_wireguard/g' package/helloworld/sing-box/Makefile
+# 强行拉取缺失的 uTLS 依赖定义（sbwml 库里没有这两味药）
+[ ! -d "package/libs/libutls" ] && git clone --depth=1 https://github.com/fw876/helloworld package/temp_hw
+cp -r package/temp_hw/libustls package/libs/ 2>/dev/null
+cp -r package/temp_hw/libutls package/libs/ 2>/dev/null
+rm -rf package/temp_hw
 
-# 补齐 TLS 库依赖（补足气血）
-# 确保编译输出中包含必要的 ca-bundle 和 libustls以及libopenssl-afalg
-echo "CONFIG_PACKAGE_ca-bundle=y" >> .config
-echo "CONFIG_PACKAGE_libustls=y" >> .config
+# 自动寻找 sing-box 的 Makefile 位置
+SB_PATH=$(find package/ -name "Makefile" | grep "sing-box/Makefile" | head -n 1)
+
+if [ -n "$SB_PATH" ]; then
+    # 注入 libustls 依赖：这是让 uTLS 真正生效的钥匙
+    sed -i 's/DEPENDS:=.*/& +libustls/g' "$SB_PATH"
+    
+    # 强制开启 with_utls 等核心编译 Tags
+    # 这一步是为了防止 sbwml 的默认配置覆盖了我们的火种
+    sed -i 's/GO_PKG_BUILD_TAGS:=.*/GO_PKG_BUILD_TAGS:=with_utls,with_quic,with_clash_api,with_dhcp,with_wireguard/g' "$SB_PATH"
+fi
+
+# 物理切除导致卡顿的 afalg-sync 插件
+sed -i 's/CONFIG_PACKAGE_libopenssl-afalg-sync=y/CONFIG_PACKAGE_libopenssl-afalg-sync=n/g' .config
+# 确保标准的 afalg（异步模式）保持开启
 echo "CONFIG_PACKAGE_libopenssl-afalg=y" >> .config
 # ------------------------------------------------------------
 
