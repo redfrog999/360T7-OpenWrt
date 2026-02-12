@@ -53,28 +53,6 @@ rm -rf feeds/luci/applications/{luci-app-passwall,luci-app-ssr-libev-server}
 # git clone https://github.com/lwb1978/openwrt-passwall package/passwall-luci
 git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
 
-# 1. 搬运药材：强行拉取并物理位移 libustls
-# 我们先拉取到临时目录，再物理移动到内核库目录，确保编译系统100%能看到
-git clone --depth=1 https://github.com/fw876/helloworld package/temp_deps
-mkdir -p package/libs
-cp -r package/temp_deps/libustls package/libs/
-cp -r package/temp_deps/libutls package/libs/
-rm -rf package/temp_deps
-
-# 2. 强行修改 sbwml 的 sing-box Makefile
-# 云端环境目录深，我们用 find 动态定位
-SB_MAKEFILE=$(find package/ -name "Makefile" | grep "sing-box/Makefile" | head -n 1)
-
-if [ -f "$SB_MAKEFILE" ]; then
-    # 强制注入 libustls 依赖
-    sed -i 's/DEPENDS:=.*/& +libustls/g' "$SB_MAKEFILE"
-    # 强制注入满血版 Tags，开启 uTLS 和 QUIC 等核心功能
-    sed -i 's/GO_PKG_BUILD_TAGS:=.*/GO_PKG_BUILD_TAGS:=with_utls,with_quic,with_clash_api,with_dhcp,with_wireguard/g' "$SB_MAKEFILE"
-fi
-
-# 3. 封印血栓 (你之前的成功经验)
-sed -i 's/CONFIG_PACKAGE_libopenssl-afalg-sync=y/CONFIG_PACKAGE_libopenssl-afalg-sync=n/g' .config
-echo "CONFIG_PACKAGE_libopenssl-afalg=y" >> .config
 # ------------------------------------------------------------
 
 # Passwall2
