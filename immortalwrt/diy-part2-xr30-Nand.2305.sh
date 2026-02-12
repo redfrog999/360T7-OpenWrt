@@ -291,6 +291,10 @@ sed -i '/exit 0/i \
 sysctl -w net.netfilter.nf_conntrack_helper=1 \
 sysctl -w net.netfilter.nf_flow_table_hw=1' package/base-files/files/etc/rc.local
 
+# --- 7. 物理封印 MTK 硬件流控 (HQoS) ---
+# 既然有 BBR+FQ，这种陈旧的硬件流控就是负担
+sed -i 's/CONFIG_PACKAGE_luci-app-mtkhqos=y/CONFIG_PACKAGE_luci-app-mtkhqos=n/g' .config
+
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
