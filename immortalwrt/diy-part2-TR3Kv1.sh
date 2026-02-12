@@ -244,6 +244,17 @@ echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
 # 3. 释放内核编译时的指令优化限制
 sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
 
+# 4. 固化 TCP BBR 加速与内核优化 ---
+# 强制将 BBR 写入系统默认配置，无需插件干预
+echo "net.ipv4.tcp_congestion_control=bbr" >> package/base-files/files/etc/sysctl.conf
+echo "net.core.default_qdisc=fq" >> package/base-files/files/etc/sysctl.conf
+
+# 5. 确保物理 HNAT (PPE) 默认开启 ---
+# 在系统启动脚本中直接注入开启指令，不再依赖 TurboACC 面板
+sed -i '/exit 0/i \
+sysctl -w net.netfilter.nf_conntrack_helper=1 \
+sysctl -w net.netfilter.nf_flow_table_hw=1' package/base-files/files/etc/rc.local
+
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
