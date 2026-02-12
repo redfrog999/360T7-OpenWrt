@@ -5530,7 +5530,7 @@ CONFIG_OPENSSL_WITH_WHIRLPOOL=y
 CONFIG_OPENSSL_ENGINE=y
 # CONFIG_OPENSSL_ENGINE_BUILTIN is not set
 CONFIG_PACKAGE_libopenssl-afalg=y
-CONFIG_PACKAGE_libopenssl-afalg_sync=y
+# CONFIG_PACKAGE_libopenssl-afalg_sync is not set
 
 #
 # Build Options
