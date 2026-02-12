@@ -44,6 +44,16 @@ merge_package v5 https://github.com/sbwml/openwrt_helloworld package/passwall-pa
 rm -rf feeds/luci/applications/{luci-app-passwall,luci-app-ssr-libev-server}
 # git clone https://github.com/lwb1978/openwrt-passwall package/passwall-luci
 git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
+
+# 修改 sing-box 的 Makefile，强行注入编译 Tags
+# 这里的逻辑是找到 Makefile 中的编译参数，强制加入 with_utls, with_quic 等
+sed -i 's/GO_PKG_BUILD_TAGS:=/GO_PKG_BUILD_TAGS:=with_utls,with_quic,with_clash_api,with_dhcp,with_wireguard/g' package/helloworld/sing-box/Makefile
+
+# 补齐 TLS 库依赖（补足气血）
+# 确保编译输出中包含必要的 ca-bundle 和 libustls以及libopenssl-afalg
+echo "CONFIG_PACKAGE_ca-bundle=y" >> .config
+echo "CONFIG_PACKAGE_libustls=y" >> .config
+echo "CONFIG_PACKAGE_libopenssl-afalg=y" >> .config
 # ------------------------------------------------------------
 
 # Passwall2
