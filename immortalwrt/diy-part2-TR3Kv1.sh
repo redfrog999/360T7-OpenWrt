@@ -236,38 +236,34 @@ sysctl -w net.netfilter.nf_flow_table_hw=1' package/base-files/files/etc/rc.loca
 sed -i 's/CONFIG_PACKAGE_libopenssl-afalg-sync=y/CONFIG_PACKAGE_libopenssl-afalg-sync=n/g' .config
 
 # --- 2. 机型定向优化逻辑 ---
-# 获取设备名称并针对性注入内核参数 (针对 eMMC/NAND 差异)
-cat >> package/base-files/files/etc/sysctl.conf <<EOF
+# 确保在写入 sysctl.conf 时不会因为 EOF 解析报错
+cat >> package/base-files/files/etc/sysctl.conf <<'EOF'
 
 # [通用优化] 开启 BBR 和 高精度计时器，降低微秒级抖动
 kernel.sched_latency_ns=10000000
 kernel.sched_min_granularity_ns=2000000
 
-# [针对性分流调优]
 EOF
 
-# 根据固件编译时的模型名进行判断
-if [[ $(grep -i "rax3000m-emmc\|xr30-emmc" .config) ]]; then
-    # eMMC 机型：强化 I/O 缓冲区，减少文件读写导致的 I/O Wait，释放 800M 空间主权
+# 移除 EOF 块，改用直接追加，防止嵌套 if 语句导致 EOF 解析失败
+if grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
     echo "# eMMC Optimize" >> package/base-files/files/etc/sysctl.conf
     echo "vm.vfs_cache_pressure=50" >> package/base-files/files/etc/sysctl.conf
     echo "vm.dirty_ratio=20" >> package/base-files/files/etc/sysctl.conf
     echo "vm.dirty_background_ratio=10" >> package/base-files/files/etc/sysctl.conf
-elif [[ $(grep -i "360t7\|xr30-nand" .config) ]]; then
-    # NAND 机型：强化内存弹性，应对 UDP 突发流量，利用定制机的“冗余容错”
+elif grep -iq "360t7\|xr30-nand" .config; then
     echo "# NAND/MTK-Custom Optimize" >> package/base-files/files/etc/sysctl.conf
     echo "vm.min_free_kbytes=16384" >> package/base-files/files/etc/sysctl.conf
     echo "vm.swappiness=10" >> package/base-files/files/etc/sysctl.conf
-elif [[ $(grep -i "tr3000v1" .config) ]]; then
-    # TR3000v1 机皇：开启极致 Cache 缓存与异步压力分配
+elif grep -iq "tr3000v1" .config; then
     echo "# TR3000v1-Export Optimize" >> package/base-files/files/etc/sysctl.conf
     echo "vm.vfs_cache_pressure=10" >> package/base-files/files/etc/sysctl.conf
     echo "kernel.nmi_watchdog=0" >> package/base-files/files/etc/sysctl.conf
 fi
 
 # --- 3. 存储挂载优化 (针对有 eMMC 的机型) ---
-# 强制开启 noatime 减少写磨损，提升读取效率
-sed -i 's/options\s*\'errors=remount-ro\'/options \'noatime,nodiratime,errors=remount-ro\'/g' package/base-files/files/lib/functions/uci-defaults.sh || true
+# 使用双引号包裹 sed 逻辑，避免单引号嵌套导致的 EOF 错误
+sed -i "s/options\s*'errors=remount-ro'/options 'noatime,nodiratime,errors=remount-ro'/g" package/base-files/files/lib/functions/uci-defaults.sh || true
 
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
