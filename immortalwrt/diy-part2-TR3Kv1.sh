@@ -229,41 +229,68 @@ sysctl -w net.netfilter.nf_conntrack_helper=1 \
 sysctl -w net.netfilter.nf_flow_table_hw=1' package/base-files/files/etc/rc.local
 
 # =========================================================
-# 极致性能压榨与大清洗：运营商定制机/外销机 差异化调优
+# 1.65GHz 超频矩阵终极调优脚本 (全量整合版)
+# 适用机型：RAX3000M, XR30 (eMMC/NAND), 360T7, TR3000v1
 # =========================================================
 
-# --- 1. 核心内核参数注入 (通用部分) ---
+# --- 1. 核心内核参数注入 (通用高速路) ---
 cat >> package/base-files/files/etc/sysctl.conf <<'EOF'
 
-# [通用优化] 开启 BBR 和 高精度计时器
+# [通用优化] 开启 BBR 拥塞控制
 net.core.default_qdisc=fq
 net.ipv4.tcp_congestion_control=bbr
-kernel.sched_latency_ns=10000000
-kernel.sched_min_granularity_ns=2000000
+
+# [1.65GHz 调度适配] 缩短调度周期，匹配高频心跳，降低 Hy2 延迟
+kernel.sched_latency_ns=8000000
+kernel.sched_min_granularity_ns=1000000
+kernel.sched_wakeup_granularity_ns=1500000
+
+# [网络吞吐优化] 提高软中断处理预算
+net.core.netdev_budget=1000
+net.core.netdev_budget_usecs=10000
 EOF
 
-# --- 2. 分机型精准调优 (自闭环 If-Else 逻辑) ---
+# --- 2. 分机型精准调优逻辑 (解决 eMMC 波动与 NAND 压榨) ---
+
 if grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
-    # [eMMC 平衡版] 修复无线不稳，兼顾 Cache 深度
-    echo "# eMMC Balanced Optimize" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.vfs_cache_pressure=60" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.dirty_ratio=10" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.dirty_background_ratio=5" >> package/base-files/files/etc/sysctl.conf
+    # 【eMMC 狂暴适配版】针对超频后的 I/O 瓶颈优化
+    echo "# 1.65GHz Overclocked & eMMC Balanced" >> package/base-files/files/etc/sysctl.conf
+    # 压榨 Cache 到 40 (高频 CPU 处理回收极快)，保留 B站秒开快感
+    echo "vm.vfs_cache_pressure=40" >> package/base-files/files/etc/sysctl.conf
+    # 免死金牌：预留 20MB 物理内存，确保 1.65G 下无线驱动 DMA 不断流
     echo "vm.min_free_kbytes=20480" >> package/base-files/files/etc/sysctl.conf
+    # 缩短脏数据回写周期，防止 eMMC 瞬间 I/O 阻塞导致网速波动
+    echo "vm.dirty_expire_centisecs=1500" >> package/base-files/files/etc/sysctl.conf
+    echo "vm.dirty_writeback_centisecs=300" >> package/base-files/files/etc/sysctl.conf
 
 elif grep -iq "360t7\|xr30-nand" .config; then
-    # [NAND 鲁棒版] 强化内存弹性
-    echo "# NAND Optimize" >> package/base-files/files/etc/sysctl.conf
+    # 【NAND 极致压榨版】
+    echo "# 1.65GHz NAND Extreme Mode" >> package/base-files/files/etc/sysctl.conf
+    # 开启透明大页，减少超频后的 TLB 寻址开销
+    echo "kernel.mm.transparent_hugepages.enabled=always" >> package/base-files/files/etc/sysctl.conf
+    # NAND 机型内存相对宽裕，预留 16MB 即可
     echo "vm.min_free_kbytes=16384" >> package/base-files/files/etc/sysctl.conf
     echo "vm.swappiness=10" >> package/base-files/files/etc/sysctl.conf
 
 elif grep -iq "tr3000v1" .config; then
-    # [机皇极致版] 极致 Cache 与 1.6G 匹配
-    echo "# TR3000v1 Extreme Optimize" >> package/base-files/files/etc/sysctl.conf
+    # 【TR3000v1 机皇专属】
+    echo "# TR3000v1 Export Extreme" >> package/base-files/files/etc/sysctl.conf
+    # 极致 Cache 深度，10 为极限，配合 1.6G+ 暴力主频
     echo "vm.vfs_cache_pressure=10" >> package/base-files/files/etc/sysctl.conf
     echo "kernel.nmi_watchdog=0" >> package/base-files/files/etc/sysctl.conf
 fi
-# --- 结束判断链 ---
+
+# --- 3. 物理级性能解锁 (通用) ---
+# 开启内核 RCU 卸载，减少系统琐事对高频核心的打扰
+echo "kernel.rcu_nocb_poll=1" >> package/base-files/files/etc/sysctl.conf
+
+# 强制移除内耗插件 (清理血栓)
+sed -i 's/CONFIG_PACKAGE_luci-app-turboacc=y/CONFIG_PACKAGE_luci-app-turboacc=n/g' .config
+sed -i 's/CONFIG_PACKAGE_luci-app-wrtbwmon=y/CONFIG_PACKAGE_luci-app-wrtbwmon=n/g' .config
+sed -i 's/CONFIG_PACKAGE_luci-app-nlbwmon=y/CONFIG_PACKAGE_luci-app-nlbwmon=n/g' .config
+
+# --- 4. 存储挂载优化 (使用双引号避免 EOF 报错) ---
+sed -i "s/options\s*'errors=remount-ro'/options 'noatime,nodiratime,errors=remount-ro'/g" package/base-files/files/lib/functions/uci-defaults.sh || true
 
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
