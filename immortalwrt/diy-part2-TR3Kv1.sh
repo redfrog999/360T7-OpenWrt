@@ -246,11 +246,15 @@ kernel.sched_min_granularity_ns=2000000
 EOF
 
 # 移除 EOF 块，改用直接追加，防止嵌套 if 语句导致 EOF 解析失败
-if grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
-    echo "# eMMC Optimize" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.vfs_cache_pressure=50" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.dirty_ratio=20" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.dirty_background_ratio=10" >> package/base-files/files/etc/sysctl.conf
+elif grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
+    echo "# eMMC Balanced Optimize (Fixed)" >> package/base-files/files/etc/sysctl.conf
+    # 稍微放开内存回收，给无线驱动留出 DMA 空间
+    echo "vm.vfs_cache_pressure=60" >> package/base-files/files/etc/sysctl.conf
+    # 减小脏数据占比，防止瞬间写回导致的 I/O 阻塞
+    echo "vm.dirty_ratio=10" >> package/base-files/files/etc/sysctl.conf
+    echo "vm.dirty_background_ratio=5" >> package/base-files/files/etc/sysctl.conf
+    # 提高内存低水位的报警线，确保无线连接稳定
+    echo "vm.min_free_kbytes=20480" >> package/base-files/files/etc/sysctl.conf
 elif grep -iq "360t7\|xr30-nand" .config; then
     echo "# NAND/MTK-Custom Optimize" >> package/base-files/files/etc/sysctl.conf
     echo "vm.min_free_kbytes=16384" >> package/base-files/files/etc/sysctl.conf
