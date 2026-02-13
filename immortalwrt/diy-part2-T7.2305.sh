@@ -265,42 +265,38 @@ sysctl -w net.netfilter.nf_flow_table_hw=1' package/base-files/files/etc/rc.loca
 # 极致性能压榨与大清洗：运营商定制机/外销机 差异化调优
 # =========================================================
 
-# ---0. 封印血栓：释放 OpenSSL 异步能力 ---
-sed -i 's/CONFIG_PACKAGE_libopenssl-afalg-sync=y/CONFIG_PACKAGE_libopenssl-afalg-sync=n/g' .config
-
-# --- 1. 机型定向优化逻辑 ---
-# 确保在写入 sysctl.conf 时不会因为 EOF 解析报错
+# --- 1. 核心内核参数注入 (通用部分) ---
 cat >> package/base-files/files/etc/sysctl.conf <<'EOF'
 
-# [通用优化] 开启 BBR 和 高精度计时器，降低微秒级抖动
+# [通用优化] 开启 BBR 和 高精度计时器
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
 kernel.sched_latency_ns=10000000
 kernel.sched_min_granularity_ns=2000000
-
 EOF
 
-# 移除 EOF 块，改用直接追加，防止嵌套 if 语句导致 EOF 解析失败
-elif grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
-    echo "# eMMC Balanced Optimize (Fixed)" >> package/base-files/files/etc/sysctl.conf
-    # 稍微放开内存回收，给无线驱动留出 DMA 空间
+# --- 2. 分机型精准调优 (自闭环 If-Else 逻辑) ---
+if grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
+    # [eMMC 平衡版] 修复无线不稳，兼顾 Cache 深度
+    echo "# eMMC Balanced Optimize" >> package/base-files/files/etc/sysctl.conf
     echo "vm.vfs_cache_pressure=60" >> package/base-files/files/etc/sysctl.conf
-    # 减小脏数据占比，防止瞬间写回导致的 I/O 阻塞
     echo "vm.dirty_ratio=10" >> package/base-files/files/etc/sysctl.conf
     echo "vm.dirty_background_ratio=5" >> package/base-files/files/etc/sysctl.conf
-    # 提高内存低水位的报警线，确保无线连接稳定
     echo "vm.min_free_kbytes=20480" >> package/base-files/files/etc/sysctl.conf
+
 elif grep -iq "360t7\|xr30-nand" .config; then
-    echo "# NAND/MTK-Custom Optimize" >> package/base-files/files/etc/sysctl.conf
+    # [NAND 鲁棒版] 强化内存弹性
+    echo "# NAND Optimize" >> package/base-files/files/etc/sysctl.conf
     echo "vm.min_free_kbytes=16384" >> package/base-files/files/etc/sysctl.conf
     echo "vm.swappiness=10" >> package/base-files/files/etc/sysctl.conf
+
 elif grep -iq "tr3000v1" .config; then
-    echo "# TR3000v1-Export Optimize" >> package/base-files/files/etc/sysctl.conf
+    # [机皇极致版] 极致 Cache 与 1.6G 匹配
+    echo "# TR3000v1 Extreme Optimize" >> package/base-files/files/etc/sysctl.conf
     echo "vm.vfs_cache_pressure=10" >> package/base-files/files/etc/sysctl.conf
     echo "kernel.nmi_watchdog=0" >> package/base-files/files/etc/sysctl.conf
 fi
-
-# --- 2. 存储挂载优化 (针对有 eMMC 的机型) ---
-# 使用双引号包裹 sed 逻辑，避免单引号嵌套导致的 EOF 错误
-sed -i "s/options\s*'errors=remount-ro'/options 'noatime,nodiratime,errors=remount-ro'/g" package/base-files/files/lib/functions/uci-defaults.sh || true
+# --- 结束判断链 ---
 
 # 自定义默认配置
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
