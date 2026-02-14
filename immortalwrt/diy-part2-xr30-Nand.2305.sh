@@ -52,17 +52,32 @@ git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-
 
 # ------------------------------------------------------------
 
-# Passwall2
-rm -rf feeds/luci/applications/luci-app-passwall2
-git clone https://github.com/Openwrt-Passwall/openwrt-passwall2 package/luci-app-passwall2
-
 # Nikki
 rm -rf feeds/luci/applications/luci-app-nikki
 git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
 
-# Openclash
-rm -rf feeds/luci/applications/luci-app-openclash
-git clone https://github.com/vernesong/OpenClash/luci-app-openclash
+# --- [OpenClash 彻底去瘀更新版] ---
+
+# 1. 彻底删除源码树中自带的老旧 OpenClash (如果有的话)
+# 这一步是关键，防止编译系统识别到两个同名包导致瘀堵
+find ./ -readonly -prune -o -name "luci-app-openclash" -type d -exec rm -rf {} +
+
+# 2. 克隆最新版 OpenClash 源码 (直接从 vernesong 仓库拉取 master 分支)
+# 这样保证了你的 LUCI 界面和最新的 SmartCore 能够完美对齐
+git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package/luci-app-openclash
+
+# 3. 强行修正 Makefile 依赖 (核心步骤)
+# 将默认的 dnsmasq 依赖改为 dnsmasq-full，适配你的内核分流逻辑
+sed -i 's/dnsmasq/dnsmasq-full/g' package/luci-app-openclash/luci-app-openclash/Makefile
+
+# 4. 预置 SmartCore (如果你在脚本前面已经下载了内核，这里做个硬链接)
+# 确保编译后的固件第一次启动就自带“大脑”
+mkdir -p files/etc/openclash/core
+if [ -f files/etc/openclash/core/clash_meta ]; then
+    cp -f files/etc/openclash/core/clash_meta files/etc/openclash/core/clash
+fi
+
+echo "✅ 老旧 OpenClash 已清理，最新版已就位！"
 
 # 优化socat中英翻译
 sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat.po
