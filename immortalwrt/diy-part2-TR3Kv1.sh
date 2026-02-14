@@ -47,6 +47,10 @@ git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-
 rm -rf feeds/luci/applications/luci-app-passwall2
 git clone https://github.com/Openwrt-Passwall/openwrt-passwall2 package/luci-app-passwall2
 
+# Openclash
+rm -rf feeds/luci/applications/luci-app-openclash
+git clone https://github.com/vernesong/OpenClash/luci-app-openclash
+
 # 优化socat中英翻译
 sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat.po
 
