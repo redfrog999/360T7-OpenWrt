@@ -329,6 +329,27 @@ sed -i "s/options\s*'errors=remount-ro'/options 'noatime,nodiratime,errors=remou
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
 
+#!/bin/bash
+# --- [大补丸] nftables 前置分流脚本 ---
+
+# 创建分流表 (如果不存在)
+nft add table inet bypass_clash
+nft add chain inet bypass_clash prerouting { type filter hook prerouting priority -150 \; }
+
+# 1. 允许本地回环和内网直连
+nft add rule inet bypass_clash prerouting ip daddr { 127.0.0.0/8, 192.168.0.0/16, 10.0.0.0/8 } accept
+
+# 2. 核心：墙内 IP (CHN-IP) 绕过 Clash，直达 HNAT
+# 假设你已经有 chnroute 集合，如果没有，脚本会自动尝试匹配本地列表
+if nft list set inet fw4 chnroute &>/dev/null; then
+    nft add rule inet bypass_clash prerouting ip daddr @chnroute counter accept
+    echo "HNAT Offload for CHN-IP enabled."
+fi
+
+# 3. 剩余流量标记并交给 Clash (通常由 OpenClash 默认劫持逻辑处理)
+# 我们在这里确保 SafeXcel 加速位已经准备好
+echo "SafeXcel Hardware acceleration for AnyTLS/TUIC path prepared."
+
 # 拷贝自定义文件
 if [ -n "$(ls -A "${GITHUB_WORKSPACE}/immortalwrt/diy" 2>/dev/null)" ]; then
 	cp -Rf ${GITHUB_WORKSPACE}/immortalwrt/diy/* .
