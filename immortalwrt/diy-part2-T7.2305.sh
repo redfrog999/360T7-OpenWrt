@@ -78,6 +78,15 @@ fi
 
 echo "✅ 老旧 OpenClash 已清理，最新版已就位！"
 
+# 在 DIY2.sh 中确保核心依赖存在
+# 这些包是 OpenClash 运行时的“血管”，缺了就会产生你说的“中焦瘀堵”
+sed -i '/custom/d' feeds.conf.default
+echo "src-git small https://github.com/kenzok8/small" >> feeds.conf.default
+echo "src-git small8 https://github.com/kenzok8/small-package" >> feeds.conf.default
+
+# 重新更新一遍，确保所有缺失的依赖 ipk 都能在本地找到源码
+./scripts/feeds update -a && ./scripts/feeds install -a
+
 # Nikki
 rm -rf feeds/luci/applications/luci-app-nikki
 git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
