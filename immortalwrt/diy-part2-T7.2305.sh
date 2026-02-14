@@ -329,78 +329,52 @@ sed -i "s/options\s*'errors=remount-ro'/options 'noatime,nodiratime,errors=remou
 sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
 
-#!/bin/bash
+# --- [MT7981 温柔全量版] 放入 DIY2.sh 末尾 ---
 
-# --- 1. 物理层：1.65GHz 稳健频率与内存保护 ---
-cat >> package/base-files/files/etc/rc.local <<'EOF'
-# 锁定 1.65GHz，这是 MT7981 的黄金甜蜜点
-for i in /sys/devices/system/cpu/cpufreq/policy*; do
-    echo performance > "$i/scaling_governor"
-done
-
-# 开启 SafeXcel 硬件加速映射 (512M 设备更需要硬件分担 CPU 压力)
-modprobe crypto_safexcel 2>/dev/null
-for i in $(find /sys/kernel/debug/crypto/ -name priority 2>/dev/null); do
-    echo 300 > "$i"
-done
-
-# 512M 专项：增加内存回收频率，防止 OOM
-echo 1000 > /proc/sys/vm/vfs_cache_pressure
-echo 10 > /proc/sys/vm/swappiness
-EOF
-
-# --- 2. 逻辑层：轻量化 nftables 分流 ---
-# 512M 设备不建议加载全量 chnroute 集合（太吃内存）
-# 我们改为加载精简版或利用路由表辅助
+# 1. 轻量化分流：解耦 dnsmasq 与代理核心
 mkdir -p package/base-files/files/etc
 cat > package/base-files/files/etc/bypass_gentle.nft <<'EOF'
 #!/usr/sbin/nft -f
-
-table inet global_bypass {
-    # 512M 内存建议使用更精简的 IP 集合
-    set chnroute {
-        type ipv4_addr
-        flags interval
-    }
-
+table inet global_distributor {
+    set chnroute { type ipv4_addr; flags interval; }
     chain prerouting {
         type filter hook prerouting priority -150; policy accept;
-        
-        # 1. 基础绕过
-        ip daddr { 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 } accept
-
-        # 2. 核心分流：墙内直连 (触发 HNAT)
+        ip daddr { 127.0.0.0/8, 10.0.0.0/8, 192.168.0.0/16 } accept
         ip daddr @chnroute counter accept
-
-        # 3. 墙外标记：只对必要流量打标
-        meta mark set 0x1
+        meta mark set 0x66
     }
-
-    chain mangle_prerouting {
+    chain dispatch {
         type filter hook prerouting priority -100; policy accept;
-        meta mark 0x1 tproxy to :7893
+        meta mark 0x66 tproxy to :7893
     }
 }
 EOF
 
-# --- 3. 内存专项：zRAM 与 I/O 调优 ---
-# 为 512M 设备开启 zRAM 虚拟内存，增加系统稳定性
+# 2. 512M 专项内存守护与 zRAM
 cat >> package/base-files/files/etc/config/system <<'EOF'
 config zram
     option enabled '1'
-    option size '128' # 虚拟 128M 内存空间
+    option size '128'
 EOF
 
-# 针对 512M 优化的系统参数
 cat >> package/base-files/files/etc/sysctl.conf <<'EOF'
-vm.overcommit_memory=1
-vm.min_free_kbytes=16384
+vm.vfs_cache_pressure=1000
+vm.swappiness=10
 net.ipv4.tcp_mem=4096 8192 16384
 EOF
 
-# --- 4. 防火墙与自动加载 ---
-cat >> package/base-files/files/etc/config/firewall <<'EOF'
+# 3. 稳健频率调度
+cat >> package/base-files/files/etc/rc.local <<'EOF'
+for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done
+modprobe crypto_safexcel 2>/dev/null
+# 针对 512M 仅加载精简版 CHN-IP 以节省内存
+curl -sL http://www.ipdeny.com/ipblocks/data/countries/cn.zone | head -n 1000 | while read line; do
+    nft add element inet global_distributor chnroute { $line } 2>/dev/null
+done
+EOF
 
+# 4. 防火墙注入
+cat >> package/base-files/files/etc/config/firewall <<'EOF'
 config include 'bypass_gentle'
 	option type 'script'
 	option path '/etc/bypass_gentle.nft'
