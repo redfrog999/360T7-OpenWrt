@@ -109,6 +109,60 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
+    - name: Precise Download SmartCore (AI-Driven) for MT798x
+      run: |
+        # ==================== 核心配置 ====================
+        # 指向你提供的 vernesong 智能内核仓库路径
+        SMARTCORE_RAW_URL="https://raw.githubusercontent.com/vernesong/OpenClash/core/master/smart/clash-linux-arm64.tar.gz"
+        CORE_DIR="openwrt/files/etc/openclash/core"
+        # ==================================================
+
+        ROOT_DIR=$(pwd)
+        FULL_CORE_DIR="$ROOT_DIR/$CORE_DIR"
+        FULL_TARGET_FILE="$FULL_CORE_DIR/clash_meta"
+
+        echo "🎯 正在从 OpenClash 核心仓库提取 SmartCore..."
+
+        # 1. 强制创建目录
+        mkdir -p "$FULL_CORE_DIR" || { echo "❌ 创建目录失败"; exit 1; }
+
+        # 2. 下载指定的 SmartCore 压缩包
+        echo "📥 下载路径: $SMARTCORE_RAW_URL"
+        wget -O /tmp/smartcore.tar.gz --no-check-certificate "$SMARTCORE_RAW_URL" || {
+          echo "❌ 下载失败！请检查 Raw 链接是否有效"; exit 1;
+        }
+
+        # 3. 解压并精准放置
+        # 智能内核通常是 .tar.gz 封装
+        tar -zxvf /tmp/smartcore.tar.gz -C /tmp/ || {
+          echo "❌ 解压失败"; exit 1;
+        }
+
+        # 4. 找到解压出的二进制文件并移动（关键修正）
+        # 搜索解压出的 clash 文件并强制重命名为 clash_meta
+        # 注意：vernesong 仓库解压出的文件名通常就是 clash
+        if [ -f /tmp/clash ]; then
+          mv /tmp/clash "$FULL_TARGET_FILE"
+        else
+          find /tmp -type f -name "clash*" -exec mv {} "$FULL_TARGET_FILE" \;
+        fi
+
+        # 5. 权限与验证
+        chmod +x "$FULL_TARGET_FILE"
+        echo "🧪 验证 SmartCore 架构与版本..."
+        FILE_INFO=$(file "$FULL_TARGET_FILE")
+        
+        if echo "$FILE_INFO" | grep -q "aarch64"; then
+          echo "✅ 成功获取 arm64 架构 SmartCore"
+          echo "📋 内核详细信息: $FILE_INFO"
+        else
+          echo "❌ 架构错误，抓取到的不是 aarch64 内核"; exit 1
+        fi
+
+        # 6. 预加载缓存目录（确保 AI 模块有地方放数据库）
+        mkdir -p "$ROOT_DIR/openwrt/files/etc/openclash/cache"
+        echo "🎉 SmartCore 整合完成，准备进入编译环节。"    
+
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
