@@ -79,6 +79,15 @@ fi
 
 echo "✅ 老旧 OpenClash 已清理，最新版已就位！"
 
+# 在 DIY2.sh 中确保核心依赖存在
+# 这些包是 OpenClash 运行时的“血管”，缺了就会产生你说的“中焦瘀堵”
+sed -i '/custom/d' feeds.conf.default
+echo "src-git small https://github.com/kenzok8/small" >> feeds.conf.default
+echo "src-git small8 https://github.com/kenzok8/small-package" >> feeds.conf.default
+
+# 重新更新一遍，确保所有缺失的依赖 ipk 都能在本地找到源码
+./scripts/feeds update -a && ./scripts/feeds install -a
+
 # 优化socat中英翻译
 sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat.po
 
