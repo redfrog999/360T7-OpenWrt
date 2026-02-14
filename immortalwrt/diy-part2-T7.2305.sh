@@ -330,25 +330,82 @@ sed -i '/exit 0$/d' package/emortal/default-settings/files/99-default-settings
 cat ${GITHUB_WORKSPACE}/immortalwrt/default-settings >> package/emortal/default-settings/files/99-default-settings
 
 #!/bin/bash
-# --- [大补丸] nftables 前置分流脚本 ---
 
-# 创建分流表 (如果不存在)
-nft add table inet bypass_clash
-nft add chain inet bypass_clash prerouting { type filter hook prerouting priority -150 \; }
+# --- 1. 物理层：1.65GHz 稳健频率与内存保护 ---
+cat >> package/base-files/files/etc/rc.local <<'EOF'
+# 锁定 1.65GHz，这是 MT7981 的黄金甜蜜点
+for i in /sys/devices/system/cpu/cpufreq/policy*; do
+    echo performance > "$i/scaling_governor"
+done
 
-# 1. 允许本地回环和内网直连
-nft add rule inet bypass_clash prerouting ip daddr { 127.0.0.0/8, 192.168.0.0/16, 10.0.0.0/8 } accept
+# 开启 SafeXcel 硬件加速映射 (512M 设备更需要硬件分担 CPU 压力)
+modprobe crypto_safexcel 2>/dev/null
+for i in $(find /sys/kernel/debug/crypto/ -name priority 2>/dev/null); do
+    echo 300 > "$i"
+done
 
-# 2. 核心：墙内 IP (CHN-IP) 绕过 Clash，直达 HNAT
-# 假设你已经有 chnroute 集合，如果没有，脚本会自动尝试匹配本地列表
-if nft list set inet fw4 chnroute &>/dev/null; then
-    nft add rule inet bypass_clash prerouting ip daddr @chnroute counter accept
-    echo "HNAT Offload for CHN-IP enabled."
-fi
+# 512M 专项：增加内存回收频率，防止 OOM
+echo 1000 > /proc/sys/vm/vfs_cache_pressure
+echo 10 > /proc/sys/vm/swappiness
+EOF
 
-# 3. 剩余流量标记并交给 Clash (通常由 OpenClash 默认劫持逻辑处理)
-# 我们在这里确保 SafeXcel 加速位已经准备好
-echo "SafeXcel Hardware acceleration for AnyTLS/TUIC path prepared."
+# --- 2. 逻辑层：轻量化 nftables 分流 ---
+# 512M 设备不建议加载全量 chnroute 集合（太吃内存）
+# 我们改为加载精简版或利用路由表辅助
+mkdir -p package/base-files/files/etc
+cat > package/base-files/files/etc/bypass_gentle.nft <<'EOF'
+#!/usr/sbin/nft -f
+
+table inet global_bypass {
+    # 512M 内存建议使用更精简的 IP 集合
+    set chnroute {
+        type ipv4_addr
+        flags interval
+    }
+
+    chain prerouting {
+        type filter hook prerouting priority -150; policy accept;
+        
+        # 1. 基础绕过
+        ip daddr { 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 } accept
+
+        # 2. 核心分流：墙内直连 (触发 HNAT)
+        ip daddr @chnroute counter accept
+
+        # 3. 墙外标记：只对必要流量打标
+        meta mark set 0x1
+    }
+
+    chain mangle_prerouting {
+        type filter hook prerouting priority -100; policy accept;
+        meta mark 0x1 tproxy to :7893
+    }
+}
+EOF
+
+# --- 3. 内存专项：zRAM 与 I/O 调优 ---
+# 为 512M 设备开启 zRAM 虚拟内存，增加系统稳定性
+cat >> package/base-files/files/etc/config/system <<'EOF'
+config zram
+    option enabled '1'
+    option size '128' # 虚拟 128M 内存空间
+EOF
+
+# 针对 512M 优化的系统参数
+cat >> package/base-files/files/etc/sysctl.conf <<'EOF'
+vm.overcommit_memory=1
+vm.min_free_kbytes=16384
+net.ipv4.tcp_mem=4096 8192 16384
+EOF
+
+# --- 4. 防火墙与自动加载 ---
+cat >> package/base-files/files/etc/config/firewall <<'EOF'
+
+config include 'bypass_gentle'
+	option type 'script'
+	option path '/etc/bypass_gentle.nft'
+	option reload '1'
+EOF
 
 # 拷贝自定义文件
 if [ -n "$(ls -A "${GITHUB_WORKSPACE}/immortalwrt/diy" 2>/dev/null)" ]; then
