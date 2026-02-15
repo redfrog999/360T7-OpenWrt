@@ -19,8 +19,8 @@ source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 # 默认IP修改为12.1
 sed -i 's/192.168.6.1/192.168.12.1/g' package/base-files/files/bin/config_generate
 
-# 最大连接数修改为65535
-# sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' package/base-files/files/etc/sysctl.conf
+#解决rust失败问题
+sed -i 's/BUILD_VARIANT:=host/BUILD_VARIANT:=target/g' feeds/packages/lang/rust/Makefile
 
 # luci-compat - 修复上移下移按钮翻译
 sed -i 's/<%:Up%>/<%:Move up%>/g' feeds/luci/modules/luci-compat/luasrc/view/cbi/tblsection.htm
