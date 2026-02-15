@@ -41,17 +41,17 @@ chmod +x files/etc/uci-defaults/99_physical_sovereignty
 #临时解决Rust问题
 # sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile
 
-# ------------------PassWall 科学上网--------------------------
+# ------------------PassWall 科学上网Clean--------------------------
 # 移除 openwrt feeds 自带的核心库
 rm -rf feeds/packages/net/{xray-core,v2ray-core,v2ray-geodata,sing-box,pdnsd-alt,chinadns-ng,dns2socks,dns2tcp,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview}
 # 核心库
-git clone https://github.com/Openwrt-Passwall/openwrt-passwall-packages package/passwall-packages
+# git clone https://github.com/Openwrt-Passwall/openwrt-passwall-packages package/passwall-packages
 rm -rf package/passwall-packages/{shadowsocks-rust,v2ray-geodata}
-merge_package v5 https://github.com/sbwml/openwrt_helloworld package/passwall-packages shadowsocks-rust v2ray-geodata
+# merge_package v5 https://github.com/sbwml/openwrt_helloworld package/passwall-packages shadowsocks-rust v2ray-geodata
 # app
 rm -rf feeds/luci/applications/{luci-app-passwall,luci-app-ssr-libev-server}
 # git clone https://github.com/lwb1978/openwrt-passwall package/passwall-luci
-git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
+# git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
 
 # ------------------------------------------------------------
 
@@ -77,6 +77,28 @@ if [ -f files/etc/openclash/core/clash_meta ]; then
 fi
 
 echo "✅ 老旧 OpenClash 已清理，最新版已就位！"
+
+# 1. 强制建立下载目录
+mkdir -p dl
+
+# 2. 注入物料（替换为你刚才做好的 Release 直链）
+RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/rustc-1.90.0-src.tar.xz"
+echo "🚀 正在从私有仓库搬运 Rust 260M 核心物料..."
+wget -qO dl/rustc-1.90.0-src.tar.xz "$RUST_URL"
+
+# 3. 自动对齐 Hash（这一步是救命符，防止 Checksum mismatch）
+if [ -f "dl/rustc-1.90.0-src.tar.xz" ]; then
+    NEW_HASH=$(sha256sum dl/rustc-1.90.0-src.tar.xz | awk '{print $1}')
+    echo "🎯 物料 Hash 对齐中: $NEW_HASH"
+    
+    # 强制修正 Rust Makefile 里的校验值
+    # 注意：根据你的 Makefile 路径可能需要微调
+    find feeds/packages/lang/rust -name "Makefile" -exec sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" {} \;
+    echo "✅ 注入完成，云端下载逻辑已被物理切断。"
+else
+    echo "❌ 注入失败，请确认 Release 链接有效性！"
+    exit 1
+fi
 
 # 在 DIY2.sh 中确保核心依赖存在
 # 这些包是 OpenClash 运行时的“血管”，缺了就会产生你说的“中焦瘀堵”
