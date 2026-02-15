@@ -19,14 +19,6 @@ source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 # 默认IP修改为12.1
 sed -i 's/192.168.6.1/192.168.12.1/g' package/base-files/files/bin/config_generate
 
-# 1. 找出所有在 Makefile 里定义了依赖 rust 的包并强制删除它们
-find feeds/ -name Makefile -exec grep -l "DEPENDS:=.*rust" {} + | xargs rm -rf
-
-# 2. 彻底屏蔽 Rust 相关的配置条目
-sed -i 's/CONFIG_PACKAGE_rust=y/# CONFIG_PACKAGE_rust is not set/g' .config
-sed -i 's/CONFIG_PACKAGE_librsvg=y/# CONFIG_PACKAGE_librsvg is not set/g' .config
-
-# 3. 既然没有 Rust，就不需要那些复杂的 curl patch 了，直接用原生最稳的
 # ------------------PassWall 科学上网--------------------------
 # 移除 openwrt feeds 自带的核心库
 rm -rf feeds/packages/net/{xray-core,v2ray-core,v2ray-geodata,sing-box,pdnsd-alt,chinadns-ng,dns2socks,dns2tcp,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview}
@@ -90,20 +82,6 @@ sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat
 #echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config
 #echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config
 
-# 替换udpxy为修改版，解决组播源数据有重复数据包导致的花屏和马赛克问题
-rm -rf feeds/packages/net/udpxy/Makefile
-cp -rf ${GITHUB_WORKSPACE}/patch/udpxy/Makefile feeds/packages/net/udpxy/
-# 修改 udpxy 菜单名称为大写
-sed -i 's#\"title\": \"udpxy\"#\"title\": \"UDPXY\"#g' feeds/luci/applications/luci-app-udpxy/root/usr/share/luci/menu.d/luci-app-udpxy.json
-
-# lukcy大吉
-git clone https://github.com/sirpdboy/luci-app-lucky package/lucky-packages
-# git clone https://github.com/gdy666/luci-app-lucky.git package/lucky-packages
-
-# 集客AC控制器
-git clone https://github.com/lwb1978/openwrt-gecoosac package/openwrt-gecoosac
-# git clone -b v1.0 https://github.com/lwb1978/openwrt-gecoosac package/openwrt-gecoosac
-
 # 強制給予 uci-defaults 腳本執行權限，防止雲端編譯權限丟失
 chmod +x files/etc/uci-defaults/99_physical_sovereignty
 
@@ -165,11 +143,6 @@ cat >> "feeds/luci/applications/luci-app-firewall/po/zh_Hans/firewall.po" <<-EOF
 	msgid "IPtables Firewall"
 	msgstr "IPtables 防火墙"
 EOF
-
-# 精简 UPnP 菜单名称
-sed -i 's#\"title\": \"UPnP IGD \& PCP\"#\"title\": \"UPnP\"#g' feeds/luci/applications/luci-app-upnp/root/usr/share/luci/menu.d/luci-app-upnp.json
-# 移动 UPnP 到 “网络” 子菜单
-sed -i 's/services/network/g' feeds/luci/applications/luci-app-upnp/root/usr/share/luci/menu.d/luci-app-upnp.json
 
 # golang 1.26
 rm -rf feeds/packages/lang/golang
