@@ -16,15 +16,6 @@ echo "========================="
 chmod +x ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 
-# 1. 找出所有在 Makefile 里定义了依赖 rust 的包并强制删除它们
-find feeds/ -name Makefile -exec grep -l "DEPENDS:=.*rust" {} + | xargs rm -rf
-
-# 2. 彻底屏蔽 Rust 相关的配置条目
-sed -i 's/CONFIG_PACKAGE_rust=y/# CONFIG_PACKAGE_rust is not set/g' .config
-sed -i 's/CONFIG_PACKAGE_librsvg=y/# CONFIG_PACKAGE_librsvg is not set/g' .config
-
-# 3. 既然没有 Rust，就不需要那些复杂的 curl patch 了，直接用原生最稳的
-
 # 默认IP由1.1修改为6.1
 sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generate
 
@@ -91,23 +82,6 @@ else
     exit 1
 fi
 
-# 1. 物理注入源码包（你之前的 Release 逻辑）
-# wget -O dl/rustc-1.90.0-src.tar.xz "https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/rustc-1.90.0-src.tar.xz"
-
-# 2. 暴力解决 Cargo.toml.orig 缺失报错
-# 遍历 build_dir 查找所有 serde 目录，并强行生成缺失的 orig 文件
-echo "🎯 正在执行『空文件欺骗』逻辑，修复 Rust 编译血栓..."
-find build_dir/ -name "serde-*" -type d | while read -r dir; do
-    if [ ! -f "$dir/Cargo.toml.orig" ]; then
-        touch "$dir/Cargo.toml.orig"
-        echo "✅ 已为 $dir 补齐伪造元数据"
-    fi
-done
-
-# 3. 针对 Rust 编译环境的额外保险
-# 强制跳过不必要的 vendor 校验，让编译器只关注代码本身
-export CARGO_NET_OFFLINE=true
-
 # 在 DIY2.sh 中确保核心依赖存在
 # 这些包是 OpenClash 运行时的“血管”，缺了就会产生你说的“中焦瘀堵”
 sed -i '/custom/d' feeds.conf.default
@@ -138,20 +112,6 @@ sed -i 's/仅IPv6/仅 IPv6/g' package/feeds/luci/luci-app-socat/po/zh_Hans/socat
 # openssl Enable QUIC and KTLS support
 # echo "CONFIG_OPENSSL_WITH_QUIC=y" >> .config
 # echo "CONFIG_OPENSSL_WITH_KTLS=y" >> .config
-
-# 替换udpxy为修改版，解决组播源数据有重复数据包导致的花屏和马赛克问题
-rm -rf feeds/packages/net/udpxy/Makefile
-cp -rf ${GITHUB_WORKSPACE}/patch/udpxy/Makefile feeds/packages/net/udpxy/
-# 修改 udpxy 菜单名称为大写
-sed -i 's#\"title\": \"udpxy\"#\"title\": \"UDPXY\"#g' feeds/luci/applications/luci-app-udpxy/root/usr/share/luci/menu.d/luci-app-udpxy.json
-
-# lukcy大吉
-git clone https://github.com/sirpdboy/luci-app-lucky package/lucky-packages
-# git clone https://github.com/gdy666/luci-app-lucky.git package/lucky-packages
-
-# 集客AC控制器
-git clone https://github.com/lwb1978/openwrt-gecoosac package/openwrt-gecoosac
-# git clone -b v1.0 https://github.com/lwb1978/openwrt-gecoosac package/openwrt-gecoosac
 
 # 添加主题
 rm -rf feeds/luci/themes/luci-theme-argon
