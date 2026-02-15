@@ -3,7 +3,7 @@
 echo "开始执行【万里版】逻辑对齐重构脚本……"
 echo "========================="
 
-# --- 1. 基础环境清理与物理去瘀 ---
+# --- 0. 基础环境清理与物理去瘀 ---
 # 修改默认IP
 sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generate
 
@@ -11,6 +11,27 @@ sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generat
 rm -rf feeds/packages/net/{xray*,v2ray*,sing-box,hysteria*,shadowsocks*,trojan*,clash*}
 rm -rf feeds/luci/applications/luci-app-passwall
 rm -rf package/passwall-packages
+
+# --- 1. 添加主题
+rm -rf feeds/luci/themes/luci-theme-argon
+# git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
+merge_package openwrt-24.10 https://github.com/sbwml/luci-theme-argon package luci-theme-argon
+# git clone --depth=1 -b master https://github.com/sirpdboy/luci-theme-kucat package/luci-theme-kucat
+git clone --depth=1 -b master https://github.com/NicolasMe9907/luci-theme-kucat package/luci-theme-kucat
+# git clone --depth=1 -b master https://github.com/sirpdboy/luci-app-kucat-config package/luci-app-kucat-config
+git clone --depth=1 -b main https://github.com/NicolasMe9907/luci-app-advancedplus  package/luci-app-advancedplus
+
+git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora package/luci-theme-aurora
+echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config
+
+# 取消自添加主题的默认设置
+find package/luci-theme-*/* -type f -print | grep '/root/etc/uci-defaults/' | while IFS= read -r file; do
+	sed -i '/set luci.main.mediaurlbase/d' "$file"
+done
+
+# 设置默认主题
+default_theme='kucat'
+sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/config/luci
 
 # --- 2. 插件与核心物料注入 (逻辑对齐) ---
 
