@@ -16,6 +16,9 @@ echo "========================="
 chmod +x ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 
+#解决rust失败问题
+sed -i 's/BUILD_VARIANT:=host/BUILD_VARIANT:=target/g' feeds/packages/lang/rust/Makefile
+
 # 默认IP修改为15.1
 sed -i 's/192.168.6.1/192.168.15.1/g' package/base-files/files/bin/config_generate
 
