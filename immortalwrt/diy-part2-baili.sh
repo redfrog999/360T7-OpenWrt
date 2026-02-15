@@ -19,16 +19,14 @@ source ${GITHUB_WORKSPACE}/immortalwrt/function.sh
 # 默认IP修改为12.1
 sed -i 's/192.168.6.1/192.168.12.1/g' package/base-files/files/bin/config_generate
 
-#解决rust失败问题
-sed -i 's/BUILD_VARIANT:=host/BUILD_VARIANT:=target/g' feeds/packages/lang/rust/Makefile
+# 1. 找出所有在 Makefile 里定义了依赖 rust 的包并强制删除它们
+find feeds/ -name Makefile -exec grep -l "DEPENDS:=.*rust" {} + | xargs rm -rf
 
-# luci-compat - 修复上移下移按钮翻译
-sed -i 's/<%:Up%>/<%:Move up%>/g' feeds/luci/modules/luci-compat/luasrc/view/cbi/tblsection.htm
-sed -i 's/<%:Down%>/<%:Move down%>/g' feeds/luci/modules/luci-compat/luasrc/view/cbi/tblsection.htm
+# 2. 彻底屏蔽 Rust 相关的配置条目
+sed -i 's/CONFIG_PACKAGE_rust=y/# CONFIG_PACKAGE_rust is not set/g' .config
+sed -i 's/CONFIG_PACKAGE_librsvg=y/# CONFIG_PACKAGE_librsvg is not set/g' .config
 
-# luci-compat - remove extra line breaks from description
-sed -i '/<br \/>/d' feeds/luci/modules/luci-compat/luasrc/view/cbi/full_valuefooter.htm
-
+# 3. 既然没有 Rust，就不需要那些复杂的 curl patch 了，直接用原生最稳的
 # ------------------PassWall 科学上网--------------------------
 # 移除 openwrt feeds 自带的核心库
 rm -rf feeds/packages/net/{xray-core,v2ray-core,v2ray-geodata,sing-box,pdnsd-alt,chinadns-ng,dns2socks,dns2tcp,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview}
@@ -204,22 +202,6 @@ pushd feeds/packages
 		patch -p1 < ${GITHUB_WORKSPACE}/patch/vim/0001-vim-fix-renamed-defaults-config-file.patch
 	}
 popd
-
-# Realtek driver - R8168 & R8125 & R8126 & R8152 & R8101 & r8127
-rm -rf package/kernel/{r8168,r8101,r8125,r8126,r8127}
-git clone https://github.com/sbwml/package_kernel_r8168 package/kernel/r8168
-git clone https://github.com/sbwml/package_kernel_r8152 package/kernel/r8152
-git clone https://github.com/sbwml/package_kernel_r8101 package/kernel/r8101
-git clone https://github.com/sbwml/package_kernel_r8125 package/kernel/r8125
-git clone https://github.com/sbwml/package_kernel_r8126 package/kernel/r8126
-git clone https://github.com/sbwml/package_kernel_r8127 package/kernel/r8127
-
-# 修正部分从第三方仓库拉取的软件 Makefile 路径问题
-find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/luci.mk/$(TOPDIR)\/feeds\/luci\/luci.mk/g' {}
-find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
-find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/rust\/rust-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/rust\/rust-package.mk/g' {}
-find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHREPO/PKG_SOURCE_URL:=https:\/\/github.com/g' {}
-find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/PKG_SOURCE_URL:=@GHCODELOAD/PKG_SOURCE_URL:=https:\/\/codeload.github.com/g' {}
 
 # --- 1. 注入 CachyOS 风格的全局硬件加速编译参数 ---
 # 我们直接修改 include/target.mk 里的默认 CFLAGS
