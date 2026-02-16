@@ -90,9 +90,6 @@ export CARGO_NET_OFFLINE=true
 export CARGO_GENERATE_LOCKFILE=false
 rm -rf tmp/.packageinfo
 
-# 下载并原地手术
-wget -qO dl/$RUST_FILE "$RUST_UR
-
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
 # 唤醒 SafeXcel 硬件引擎编译参数
@@ -137,6 +134,5 @@ sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
 # 最后的逻辑收束
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
-
 echo "========================="
 echo "✅ DIY2 逻辑重组完成，等待咆哮！"
