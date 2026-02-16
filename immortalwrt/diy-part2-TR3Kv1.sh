@@ -11,14 +11,21 @@ sed -i 's/192.168.6.1/192.168.15.1/g' package/base-files/files/bin/config_genera
 # 1.使用 -vE 逻辑，强制让 find 跳过这四个核心包
 find feeds/ -name Makefile -exec grep -l "DEPENDS:=.*rust" {} + | grep -vE "smartdns|ruby|dnsmasq-full" | xargs rm -rf
 
-# 2. 菜单逻辑二次加固
+# --- [依赖名对齐：解决图 7 报错的关键] ---
+# 2. 强制将 OpenClash 依赖的 dnsmasq-full-full 缩减为 dnsmasq-full
+# 这一步是为了干掉那个多余的 "-full" 后缀
+find package/ -name Makefile -exec sed -i 's/dnsmasq-full-full/dnsmasq-full/g' {} +
+find feeds/ -name Makefile -exec sed -i 's/dnsmasq-full-full/dnsmasq-full/g' {} +
+
+# 3. 菜单逻辑二次加固
 # 在脚本末尾再次显式声明，确保这些包被选中且不会被后续逻辑剔除
 echo "CONFIG_PACKAGE_dnsmasq-full=y" >> .config
 echo "CONFIG_PACKAGE_smartdns=y" >> .config
 echo "CONFIG_PACKAGE_ruby=y" >> .config
 echo "CONFIG_PACKAGE_ruby-yaml=y" >> .config
+echo "CONFIG_PACKAGE_dnsmasq=n" >> .config
 
-# 3. 彻底屏蔽 Rust 相关的配置条目
+# 4. 彻底屏蔽 Rust 相关的配置条目
 sed -i 's/CONFIG_PACKAGE_rust=y/# CONFIG_PACKAGE_rust is not set/g' .config
 sed -i 's/CONFIG_PACKAGE_librsvg=y/# CONFIG_PACKAGE_librsvg is not set/g' .config
 
