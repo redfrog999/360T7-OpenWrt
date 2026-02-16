@@ -45,29 +45,6 @@ git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
 # 克隆最新版 OpenClash 并强制对齐 dnsmasq-full
 find ./ -name "luci-app-openclash" -type d -exec rm -rf {} +
 git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package/luci-app-openclash
-sed -i 's/dnsmasq/dnsmasq-full/g' package/luci-app-openclash/luci-app-openclash/Makefile
-
-# --- [ 🧬 基因级重编：Makefile 夺权逻辑 ] ---
-RUST_MAKEFILE=$(find feeds/packages/lang/rust -name "Makefile")
-
-if [ -n "$RUST_MAKEFILE" ]; then
-    # 1. 强制换源：不准去官网，只准去你的 Release 下载
-    sed -i "s|PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/|g" "$RUST_MAKEFILE"
-    
-    # 2. 物理过审：跳过 Hash 校验
-    sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' "$RUST_MAKEFILE"
-
-    # 3. 临场补齐：在解压后的 Prepare 阶段强制补齐文件
-    # 这一行是解决图 15 中 "No such file" 的绝杀
-    sed -i '/define Build\/Prepare/a \
-	find $(PKG_BUILD_DIR) -name ".cargo-checksum.json" -delete \
-	find $(PKG_BUILD_DIR) -name "Cargo.toml.orig" -exec touch {} + \
-	find $(PKG_BUILD_DIR) -name "*.json" -exec touch {} +' "$RUST_MAKEFILE"
-fi
-
-# 4. 环境强制对齐：彻底断开 Cargo 的外连念想
-export CARGO_NET_OFFLINE=true
-export CARGO_HTTP_CHECK_REVOCABLE=false
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
