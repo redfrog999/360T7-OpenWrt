@@ -51,38 +51,35 @@ sed -i 's/dnsmasq/dnsmasq-full/g' package/luci-app-openclash/luci-app-openclash/
 # 🛡️ 逻辑对齐与物理激活：解决 Rust 编译血栓及依赖命名冲突
 # =========================================================
 
-# 1. 物理注入 Rustc 离线源码：解决下载失败及 Checksum 报错
-mkdir -p dl
+# [1. 暴力重组 Rust 源码包：解决图 13 报错的终极手段] ---
+mkdir -p dl/tmp_rust
 RUST_FILE="rustc-1.90.0-src.tar.xz"
 RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/$RUST_FILE"
-wget -qO dl/$RUST_FILE "$RUST_URL"
 
-# 2. 物理暴力对齐：解决 Cargo.toml.orig 找不到及 Checksum 计算错误
-# 我们在解压源码后立即执行：删除校验文件并补全 .orig 伪装
+# 下载并原地手术
+wget -qO dl/$RUST_FILE "$RUST_URL"
+tar -xJf dl/$RUST_FILE -C dl/tmp_rust
+
+# 关键手术：物理补齐那个让系统“睁眼瞎”的文件，并暴力删除所有校验锁
+# 既然你在图 12 确认它在 vendor 里，我们强制让它出现在系统预期的位置
+find dl/tmp_rust -name ".cargo-checksum.json" -delete
+find dl/tmp_rust -name "Cargo.toml.orig" -exec touch {} +
+
+# 重新打包回 dl 目录，覆盖原始包
+cd dl/tmp_rust && tar -cJf ../$RUST_FILE * && cd ../..
+rm -rf dl/tmp_rust
+
+# [2. 强制 Makefile 认领这个重组后的包] ---
 RUST_MAKEFILE=$(find feeds/packages/lang/rust -name "Makefile")
 if [ -n "$RUST_MAKEFILE" ]; then
-    sed -i '/\$(Build\/Patch)/i \
-	find \$(PKG_BUILD_DIR)/vendor -name ".cargo-checksum.json" -delete \
-	find \$(PKG_BUILD_DIR) -name "Cargo.toml.orig" -exec touch {} +' "$RUST_MAKEFILE"
+    # 计算我们重组后的新 Hash，防止 Makefile 因为 Hash 不对而重新下载
+    NEW_HASH=$(sha256sum dl/$RUST_FILE | awk '{print $1}')
+    sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" "$RUST_MAKEFILE"
 fi
 
-# 3. 依赖命名对齐：消除 dnsmasq-full-full 的“虚假需求”
-# 强制让 OpenClash 等插件寻找已有的 dnsmasq-full
+# [3. 依赖与环境闭环 (保持不变)] ---
 find package/ feeds/ -name Makefile -exec sed -i 's/dnsmasq-full-full/dnsmasq-full/g' {} +
-
-# 4. 保卫“生命线”：锁定核心包，确保 SmartDNS 和 OpenClash 正常封包
-echo "CONFIG_PACKAGE_dnsmasq-full=y" >> .config
-echo "CONFIG_PACKAGE_smartdns=y" >> .config
-echo "CONFIG_PACKAGE_ruby=y" >> .config
-echo "CONFIG_PACKAGE_ruby-yaml=y" >> .config
-echo "CONFIG_PACKAGE_kmod-crypto-user=y" >> .config # 唤醒 SafeXcel 的桥梁
-
-# 5. 环境强制：开启 Cargo 离线模式，杜绝编译时联网尝试
 export CARGO_NET_OFFLINE=true
-export CARGO_GENERATE_LOCKFILE=false
-
-# 6. 暴力刷新菜单索引：确保 修复后的包能被识别
-rm -rf tmp/.packageinfo
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
