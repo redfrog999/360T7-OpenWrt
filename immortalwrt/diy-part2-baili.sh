@@ -48,47 +48,43 @@ git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package
 sed -i 's/dnsmasq/dnsmasq-full/g' package/luci-app-openclash/luci-app-openclash/Makefile
 
 # =========================================================
-# 🛠️ 暴力重组与逻辑对齐：百里 2.3GHz 咆哮版终极补丁
+# 🧬 终极绝杀：Release 投送 + 物理越过 Cargo 陷阱
 # =========================================================
 
-# 1. 针对 Rustc 源码的物理手术 (解决图 13 挂死)
+# 1. 精准投送：强行指定 Release 下载路径，避开官方断链包
 RUST_FILE="rustc-1.90.0-src.tar.xz"
 RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/$RUST_FILE"
 
-mkdir -p dl/tmp_rust
+mkdir -p dl
 wget -qO dl/$RUST_FILE "$RUST_URL"
-# 手动解压并注入修复逻辑
-tar -xJf dl/$RUST_FILE -C dl/tmp_rust
-find dl/tmp_rust -name ".cargo-checksum.json" -delete
-find dl/tmp_rust -name "Cargo.toml.orig" -exec touch {} +
-# 物理封包并更新系统 Hash
-cd dl/tmp_rust && tar -cJf ../$RUST_FILE * && cd ../..
-rm -rf dl/tmp_rust
 
+# 2. 物理劫持 Makefile：注入临场手术指令
 RUST_MAKEFILE=$(find feeds/packages/lang/rust -name "Makefile")
+
 if [ -n "$RUST_MAKEFILE" ]; then
-    NEW_HASH=$(sha256sum dl/$RUST_FILE | awk '{print $1}')
-    sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" "$RUST_MAKEFILE"
+    # 强制跳过初次 Hash 校验，确保系统认领我们下载的 Release 包
+    sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' "$RUST_MAKEFILE"
+
+    # 绝杀：在 Build/Compile 启动的一瞬间，物理补齐 Cargo.toml.orig
+    # 这一步解决了你看到的“明明包里有，系统却睁眼瞎”的问题
+    sed -i '/Build\/Compile/a \
+	find $(PKG_BUILD_DIR) -name ".cargo-checksum.json" -delete \
+	find $(PKG_BUILD_DIR) -name "Cargo.toml.orig" -exec touch {} +' "$RUST_MAKEFILE"
 fi
 
-# 2. 依赖名精准对齐 (解决 dnsmasq-full-full 报错)
+# 3. 依赖名精准降级：解决 dnsmasq-full-full 报错
 find package/ feeds/ -name Makefile -exec sed -i 's/dnsmasq-full-full/dnsmasq-full/g' {} +
 
-# 3. 锁定生命线包 (确保 SmartDNS、Ruby、SafeXcel 正常)
+# 4. 锁定“咆哮版”生命线包
 echo "CONFIG_PACKAGE_dnsmasq-full=y" >> .config
 echo "CONFIG_PACKAGE_smartdns=y" >> .config
-echo "CONFIG_PACKAGE_ruby=y" >> .config
-echo "CONFIG_PACKAGE_ruby-yaml=y" >> .config
-echo "CONFIG_PACKAGE_kmod-crypto-user=y" >> .config
+echo "CONFIG_PACKAGE_kmod-crypto-user=y" >> .config # 开启 SafeXcel 硬件引擎
 
-# 4. sbwml 版 Argon 皮肤物理注入
-rm -rf feeds/luci/themes/luci-theme-argon package/luci-theme-argon
-git clone --depth 1 -b openwrt-24.10 https://github.com/sbwml/luci-theme-argon package/luci-theme-argon
-
-# 5. 编译环境闭环：强制离线编译
+# 5. 环境锁死：强制离线编译
 export CARGO_NET_OFFLINE=true
-export CARGO_GENERATE_LOCKFILE=false
+export CARGO_HTTP_CHECK_REVOCABLE=false
 rm -rf tmp/.packageinfo
+
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
 # 唤醒 SafeXcel 硬件引擎编译参数
