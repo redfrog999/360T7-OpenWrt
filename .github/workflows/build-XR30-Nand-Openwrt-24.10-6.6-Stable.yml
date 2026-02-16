@@ -123,9 +123,7 @@ jobs:
       run: |
         cd openwrt
         ./scripts/feeds update -a
-        # 针对 Rust 编译失败的补丁，尝试拉取最新的 Makefile
-        wget -O feeds/packages/lang/rust/Makefile https://raw.githubusercontent.com/immortalwrt/packages/master/lang/rust/Makefile || true
-
+        
     - name: 安装 feeds
       run: |
         cd openwrt
