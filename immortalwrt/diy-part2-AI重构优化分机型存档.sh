@@ -7,28 +7,6 @@ echo "========================="
 # 修改默认IP
 sed -i 's/192.168.6.1/192.168.10.1/g' package/base-files/files/bin/config_generate
 
-# 解除rustc依赖，但是扫描时精准避开“生命线”
-# 1.使用 -vE 逻辑，强制让 find 跳过这四个核心包
-find feeds/ -name Makefile -exec grep -l "DEPENDS:=.*rust" {} + | grep -vE "smartdns|ruby|dnsmasq-full" | xargs rm -rf
-
-# --- [依赖名对齐：解决图 7 报错的关键] ---
-# 2. 强制将 OpenClash 依赖的 dnsmasq-full-full 缩减为 dnsmasq-full
-# 这一步是为了干掉那个多余的 "-full" 后缀
-find package/ -name Makefile -exec sed -i 's/dnsmasq-full-full/dnsmasq-full/g' {} +
-find feeds/ -name Makefile -exec sed -i 's/dnsmasq-full-full/dnsmasq-full/g' {} +
-
-# 3. 菜单逻辑二次加固
-# 在脚本末尾再次显式声明，确保这些包被选中且不会被后续逻辑剔除
-echo "CONFIG_PACKAGE_dnsmasq-full=y" >> .config
-echo "CONFIG_PACKAGE_smartdns=y" >> .config
-echo "CONFIG_PACKAGE_ruby=y" >> .config
-echo "CONFIG_PACKAGE_ruby-yaml=y" >> .config
-echo "CONFIG_PACKAGE_dnsmasq=n" >> .config
-
-# 4. 彻底屏蔽 Rust 相关的配置条目
-sed -i 's/CONFIG_PACKAGE_rust=y/# CONFIG_PACKAGE_rust is not set/g' .config
-sed -i 's/CONFIG_PACKAGE_librsvg=y/# CONFIG_PACKAGE_librsvg is not set/g' .config
-
 # 彻底清理 PassWall、老旧 OpenClash 和残留核心库 (防止逻辑冲突)
 rm -rf feeds/packages/net/{xray*,v2ray*,sing-box,hysteria*,shadowsocks*,trojan*,clash*}
 rm -rf feeds/luci/applications/luci-app-passwall
@@ -45,32 +23,42 @@ find ./ -name "luci-app-openclash" -type d -exec rm -rf {} +
 git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package/luci-app-openclash
 sed -i 's/dnsmasq/dnsmasq-full/g' package/luci-app-openclash/luci-app-openclash/Makefile
 
-# 物理注入 Rustc 1.90.0 (核心规避手段)
-# 1. 物理注入 Rustc 源码 (解决下载失败) ---
+# =========================================================
+# 🛡️ 逻辑对齐与物理激活：解决 Rust 编译血栓及依赖命名冲突
+# =========================================================
+
+# 1. 物理注入 Rustc 离线源码：解决下载失败及 Checksum 报错
 mkdir -p dl
-RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/rustc-1.90.0-src.tar.xz"
-wget -qO dl/rustc-1.90.0-src.tar.xz "$RUST_URL"
+RUST_FILE="rustc-1.90.0-src.tar.xz"
+RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/$RUST_FILE"
+wget -qO dl/$RUST_FILE "$RUST_URL"
 
-# 2. 深度伪造逻辑：解决 Checksum 错误 (核心修正) ---
-# 我们不再去 build_dir 伪造文件，而是修改 Makefile，在解压后瞬间注入
-# 找到 Rust 软件包的 Makefile
+# 2. 物理暴力对齐：解决 Cargo.toml.orig 找不到及 Checksum 计算错误
+# 我们在解压源码后立即执行：删除校验文件并补全 .orig 伪装
 RUST_MAKEFILE=$(find feeds/packages/lang/rust -name "Makefile")
-
 if [ -n "$RUST_MAKEFILE" ]; then
-    # 物理修改 PKG_HASH 确保与下载的文件完全对齐
-    NEW_HASH=$(sha256sum dl/rustc-1.90.0-src.tar.xz | awk '{print $1}')
-    sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" "$RUST_MAKEFILE"
-    
-    # 注入注入伪造逻辑：在源码解压后 (Post-extract)，物理补全缺失文件并清除校验清单
-    # 这样系统在计算 Checksum 前，逻辑就已经对齐了
     sed -i '/\$(Build\/Patch)/i \
-	find \$(PKG_BUILD_DIR) -name "Cargo.toml.orig" -delete \
-	find \$(PKG_BUILD_DIR) -name "*.orig" -delete' "$RUST_MAKEFILE"
+	find \$(PKG_BUILD_DIR)/vendor -name ".cargo-checksum.json" -delete \
+	find \$(PKG_BUILD_DIR) -name "Cargo.toml.orig" -exec touch {} +' "$RUST_MAKEFILE"
 fi
 
-# 3. 环境变量对齐 (解决路径错误) ---
-# 强制指定 CARGO_HOME，防止系统去 Runner 的根目录乱撞
-echo "export CARGO_HOME=\$(TOPDIR)/dl/cargo" >> "$RUST_MAKEFILE"
+# 3. 依赖命名对齐：消除 dnsmasq-full-full 的“虚假需求”
+# 强制让 OpenClash 等插件寻找已有的 dnsmasq-full
+find package/ feeds/ -name Makefile -exec sed -i 's/dnsmasq-full-full/dnsmasq-full/g' {} +
+
+# 4. 保卫“生命线”：锁定核心包，确保 SmartDNS 和 OpenClash 正常封包
+echo "CONFIG_PACKAGE_dnsmasq-full=y" >> .config
+echo "CONFIG_PACKAGE_smartdns=y" >> .config
+echo "CONFIG_PACKAGE_ruby=y" >> .config
+echo "CONFIG_PACKAGE_ruby-yaml=y" >> .config
+echo "CONFIG_PACKAGE_kmod-crypto-user=y" >> .config # 唤醒 SafeXcel 的桥梁
+
+# 5. 环境强制：开启 Cargo 离线模式，杜绝编译时联网尝试
+export CARGO_NET_OFFLINE=true
+export CARGO_GENERATE_LOCKFILE=false
+
+# 6. 暴力刷新菜单索引：确保 修复后的包能被识别
+rm -rf tmp/.packageinfo
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
