@@ -165,8 +165,7 @@ jobs:
 
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
-               wget -O feeds/packages/lang/rust/Makefile https://raw.githubusercontent.com/immortalwrt/packages/refs/heads/master/lang/rust/Makefile
-
+           
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a
 
