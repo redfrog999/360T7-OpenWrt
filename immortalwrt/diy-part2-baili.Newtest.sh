@@ -47,12 +47,42 @@ find ./ -name "luci-app-openclash" -type d -exec rm -rf {} +
 git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package/luci-app-openclash
 sed -i 's/dnsmasq/dnsmasq-full/g' package/luci-app-openclash/luci-app-openclash/Makefile
 
-# 物理注入 Rustc 1.90.0 (核心规避手段)
-# 1. 物理注入 Rustc 源码 (解决下载失败) ---
-mkdir -p dl
-RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/rustc-1.90.0-src.tar.xz"
-wget -qO dl/rustc-1.90.0-src.tar.xz "$RUST_URL"
+# =========================================================
+# 🛡️ 逻辑对齐与物理激活：解决 Rust 编译血栓及依赖命名冲突
+# =========================================================
 
+# 1. 物理注入 Rustc 离线源码：解决下载失败及 Checksum 报错
+mkdir -p dl
+RUST_FILE="rustc-1.90.0-src.tar.xz"
+RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/$RUST_FILE"
+wget -qO dl/$RUST_FILE "$RUST_URL"
+
+# 2. 物理暴力对齐：解决 Cargo.toml.orig 找不到及 Checksum 计算错误
+# 我们在解压源码后立即执行：删除校验文件并补全 .orig 伪装
+RUST_MAKEFILE=$(find feeds/packages/lang/rust -name "Makefile")
+if [ -n "$RUST_MAKEFILE" ]; then
+    sed -i '/\$(Build\/Patch)/i \
+	find \$(PKG_BUILD_DIR)/vendor -name ".cargo-checksum.json" -delete \
+	find \$(PKG_BUILD_DIR) -name "Cargo.toml.orig" -exec touch {} +' "$RUST_MAKEFILE"
+fi
+
+# 3. 依赖命名对齐：消除 dnsmasq-full-full 的“虚假需求”
+# 强制让 OpenClash 等插件寻找已有的 dnsmasq-full
+find package/ feeds/ -name Makefile -exec sed -i 's/dnsmasq-full-full/dnsmasq-full/g' {} +
+
+# 4. 保卫“生命线”：锁定核心包，确保 SmartDNS 和 OpenClash 正常封包
+echo "CONFIG_PACKAGE_dnsmasq-full=y" >> .config
+echo "CONFIG_PACKAGE_smartdns=y" >> .config
+echo "CONFIG_PACKAGE_ruby=y" >> .config
+echo "CONFIG_PACKAGE_ruby-yaml=y" >> .config
+echo "CONFIG_PACKAGE_kmod-crypto-user=y" >> .config # 唤醒 SafeXcel 的桥梁
+
+# 5. 环境强制：开启 Cargo 离线模式，杜绝编译时联网尝试
+export CARGO_NET_OFFLINE=true
+export CARGO_GENERATE_LOCKFILE=false
+
+# 6. 暴力刷新菜单索引：确保 修复后的包能被识别
+rm -rf tmp/.packageinfo
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
 # 唤醒 SafeXcel 硬件引擎编译参数
