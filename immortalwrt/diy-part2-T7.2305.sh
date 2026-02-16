@@ -47,6 +47,12 @@ find ./ -name "luci-app-openclash" -type d -exec rm -rf {} +
 git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package/luci-app-openclash
 sed -i 's/dnsmasq/dnsmasq-full/g' package/luci-app-openclash/luci-app-openclash/Makefile
 
+# 物理注入 Rustc 1.90.0 (核心规避手段)
+# 1. 物理注入 Rustc 源码 (解决下载失败) ---
+mkdir -p dl
+RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/rustc-1.90.0-src.tar.xz"
+wget -qO dl/rustc-1.90.0-src.tar.xz "$RUST_URL"
+
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
 # 唤醒 SafeXcel 硬件引擎编译参数
