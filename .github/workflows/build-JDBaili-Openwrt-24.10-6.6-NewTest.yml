@@ -24,7 +24,7 @@ env:
   FEEDS_CONF: immortalwrt/feeds.conf.default
   CONFIG_FILE: immortalwrt/config.jdcloud_re-cp-03-Padavanonly.24.10-6.6.bak
   DIY_P1_SH: immortalwrt/diy-part1-baili.sh
-  DIY_P2_SH: immortalwrt/diy-part2-baili.sh
+  DIY_P2_SH: immortalwrt/diy-part2-baili.Newtest.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: false
