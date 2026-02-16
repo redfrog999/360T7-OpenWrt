@@ -7,21 +7,6 @@ echo "========================="
 # 修改默认IP
 sed -i 's/192.168.6.1/192.168.12.1/g' package/base-files/files/bin/config_generate
 
-# 解除rustc依赖，但是扫描时精准避开“生命线”
-# 1.使用 -vE 逻辑，强制让 find 跳过这四个核心包
-find feeds/ -name Makefile -exec grep -l "DEPENDS:=.*rust" {} + | grep -vE "smartdns|ruby|dnsmasq-full" | xargs rm -rf
-
-# 2. 菜单逻辑二次加固
-# 在脚本末尾再次显式声明，确保这些包被选中且不会被后续逻辑剔除
-echo "CONFIG_PACKAGE_dnsmasq-full=y" >> .config
-echo "CONFIG_PACKAGE_smartdns=y" >> .config
-echo "CONFIG_PACKAGE_ruby=y" >> .config
-echo "CONFIG_PACKAGE_ruby-yaml=y" >> .config
-
-# 3. 彻底屏蔽 Rust 相关的配置条目
-sed -i 's/CONFIG_PACKAGE_rust=y/# CONFIG_PACKAGE_rust is not set/g' .config
-sed -i 's/CONFIG_PACKAGE_librsvg=y/# CONFIG_PACKAGE_librsvg is not set/g' .config
-
 # 彻底清理 PassWall、老旧 OpenClash 和残留核心库 (防止逻辑冲突)
 rm -rf feeds/packages/net/{xray*,v2ray*,sing-box,hysteria*,shadowsocks*,trojan*,clash*}
 rm -rf feeds/luci/applications/luci-app-passwall
