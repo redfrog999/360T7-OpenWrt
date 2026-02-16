@@ -89,6 +89,7 @@ git clone --depth 1 -b openwrt-24.10 https://github.com/sbwml/luci-theme-argon p
 export CARGO_NET_OFFLINE=true
 export CARGO_GENERATE_LOCKFILE=false
 rm -rf tmp/.packageinfo
+
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
 # 唤醒 SafeXcel 硬件引擎编译参数
