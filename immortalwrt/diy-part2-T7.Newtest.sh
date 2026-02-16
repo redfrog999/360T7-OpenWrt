@@ -134,5 +134,6 @@ sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
 # 最后的逻辑收束
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
+
 echo "========================="
 echo "✅ DIY2 逻辑重组完成，等待咆哮！"
