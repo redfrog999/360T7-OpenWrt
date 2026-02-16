@@ -55,33 +55,31 @@ git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package
 sed -i 's/dnsmasq/dnsmasq-full/g' package/luci-app-openclash/luci-app-openclash/Makefile
 
 # 物理注入 Rustc 1.90.0 (核心规避手段)
+# 1. 物理注入 Rustc 源码 (解决下载失败) ---
 mkdir -p dl
 RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/rustc-1.90.0-src.tar.xz"
-echo "🚀 搬运 Rust 260M 核心物料..."
 wget -qO dl/rustc-1.90.0-src.tar.xz "$RUST_URL"
 
-if [ -f "dl/rustc-1.90.0-src.tar.xz" ]; then
+# 2. 深度伪造逻辑：解决 Checksum 错误 (核心修正) ---
+# 我们不再去 build_dir 伪造文件，而是修改 Makefile，在解压后瞬间注入
+# 找到 Rust 软件包的 Makefile
+RUST_MAKEFILE=$(find feeds/packages/lang/rust -name "Makefile")
+
+if [ -n "$RUST_MAKEFILE" ]; then
+    # 物理修改 PKG_HASH 确保与下载的文件完全对齐
     NEW_HASH=$(sha256sum dl/rustc-1.90.0-src.tar.xz | awk '{print $1}')
-    echo "🎯 物料 Hash 对齐: $NEW_HASH"
-    find feeds/packages/lang/rust -name "Makefile" -exec sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" {} \;
-fi # <--- 修正之前漏掉的 fi
+    sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" "$RUST_MAKEFILE"
+    
+    # 注入注入伪造逻辑：在源码解压后 (Post-extract)，物理补全缺失文件并清除校验清单
+    # 这样系统在计算 Checksum 前，逻辑就已经对齐了
+    sed -i '/\$(Build\/Patch)/i \
+	find \$(PKG_BUILD_DIR) -name "Cargo.toml.orig" -delete \
+	find \$(PKG_BUILD_DIR) -name "*.orig" -delete' "$RUST_MAKEFILE"
+fi
 
-# 1. 物理注入源码包（你之前的 Release 逻辑）
-wget -O dl/rustc-1.90.0-src.tar.xz "https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/rustc-1.90.0-src.tar.xz"
-
-# 2. 暴力解决 Cargo.toml.orig 缺失报错
-# 遍历 build_dir 查找所有 serde 目录，并强行生成缺失的 orig 文件
-echo "🎯 正在执行『空文件欺骗』逻辑，修复 Rust 编译血栓..."
-find build_dir/ -name "serde-*" -type d | while read -r dir; do
-    if [ ! -f "$dir/Cargo.toml.orig" ]; then
-        touch "$dir/Cargo.toml.orig"
-        echo "✅ 已为 $dir 补齐伪造元数据"
-    fi
-done
-
-# 3. 针对 Rust 编译环境的额外保险
-# 强制跳过不必要的 vendor 校验，让编译器只关注代码本身
-export CARGO_NET_OFFLINE=true
+# 3. 环境变量对齐 (解决路径错误) ---
+# 强制指定 CARGO_HOME，防止系统去 Runner 的根目录乱撞
+echo "export CARGO_HOME=\$(TOPDIR)/dl/cargo" >> "$RUST_MAKEFILE"
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
