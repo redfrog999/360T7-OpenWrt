@@ -48,11 +48,47 @@ git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package
 sed -i 's/dnsmasq/dnsmasq-full/g' package/luci-app-openclash/luci-app-openclash/Makefile
 
 # =========================================================
-# 🛡️ 逻辑对齐与物理激活：解决 Rust 编译血栓及依赖命名冲突
+# 🛠️ 暴力重组与逻辑对齐：百里 2.3GHz 咆哮版终极补丁
 # =========================================================
 
+# 1. 针对 Rustc 源码的物理手术 (解决图 13 挂死)
 RUST_FILE="rustc-1.90.0-src.tar.xz"
 RUST_URL="https://github.com/redfrog999/JDCloud-AX6000/releases/download/rustc_1.9.0/$RUST_FILE"
+
+mkdir -p dl/tmp_rust
+wget -qO dl/$RUST_FILE "$RUST_URL"
+# 手动解压并注入修复逻辑
+tar -xJf dl/$RUST_FILE -C dl/tmp_rust
+find dl/tmp_rust -name ".cargo-checksum.json" -delete
+find dl/tmp_rust -name "Cargo.toml.orig" -exec touch {} +
+# 物理封包并更新系统 Hash
+cd dl/tmp_rust && tar -cJf ../$RUST_FILE * && cd ../..
+rm -rf dl/tmp_rust
+
+RUST_MAKEFILE=$(find feeds/packages/lang/rust -name "Makefile")
+if [ -n "$RUST_MAKEFILE" ]; then
+    NEW_HASH=$(sha256sum dl/$RUST_FILE | awk '{print $1}')
+    sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" "$RUST_MAKEFILE"
+fi
+
+# 2. 依赖名精准对齐 (解决 dnsmasq-full-full 报错)
+find package/ feeds/ -name Makefile -exec sed -i 's/dnsmasq-full-full/dnsmasq-full/g' {} +
+
+# 3. 锁定生命线包 (确保 SmartDNS、Ruby、SafeXcel 正常)
+echo "CONFIG_PACKAGE_dnsmasq-full=y" >> .config
+echo "CONFIG_PACKAGE_smartdns=y" >> .config
+echo "CONFIG_PACKAGE_ruby=y" >> .config
+echo "CONFIG_PACKAGE_ruby-yaml=y" >> .config
+echo "CONFIG_PACKAGE_kmod-crypto-user=y" >> .config
+
+# 4. sbwml 版 Argon 皮肤物理注入
+rm -rf feeds/luci/themes/luci-theme-argon package/luci-theme-argon
+git clone --depth 1 -b openwrt-24.10 https://github.com/sbwml/luci-theme-argon package/luci-theme-argon
+
+# 5. 编译环境闭环：强制离线编译
+export CARGO_NET_OFFLINE=true
+export CARGO_GENERATE_LOCKFILE=false
+rm -rf tmp/.packageinfo
 
 # 下载并原地手术
 wget -qO dl/$RUST_FILE "$RUST_UR
