@@ -128,16 +128,17 @@ vm.vfs_cache_pressure=40
 vm.min_free_kbytes=20480
 EOF
 
-# C.[1.65GHz 调度适配] 缩短调度周期，匹配高频心跳，降低 Hy2 延迟
+# C.[ 内核调度调优：针对 A53 1.6&2.3GHz 优化 缩短调度周期，匹配高频心跳，降低 Hy2 延迟|[网络吞吐优化] 提高软中断处理预算 ]
+# 使用 append 模式写入 sysctl.conf
+cat << 'EOF' >> package/base-files/files/etc/sysctl.conf
 kernel.sched_latency_ns=8000000
 kernel.sched_min_granularity_ns=1000000
 kernel.sched_wakeup_granularity_ns=1500000
-
-# D.[网络吞吐优化] 提高软中断处理预算
 net.core.netdev_budget=1000
 net.core.netdev_budget_usecs=10000
+EOF
 
-# E.物理 HNAT (PPE) 开启逻辑注入
+# D.物理 HNAT (PPE) 开启逻辑注入
 sed -i '/exit 0/i \
 sysctl -w net.netfilter.nf_flow_table_hw=1 \
 for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done \
