@@ -115,14 +115,15 @@ CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
 CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
 EOF
 
-# [2.3GHz 调度适配] 缩短调度周期，匹配高频心跳，降低 Hy2 延迟
+# 内核调度调优：[ 针对 A53 1.6&2.3GHz 优化 缩短调度周期，匹配高频心跳，降低 Hy2 延迟|[网络吞吐优化] 提高软中断处理预算 ]
+# 使用 append 模式写入 sysctl.conf
+cat << 'EOF' >> package/base-files/files/etc/sysctl.conf
 kernel.sched_latency_ns=8000000
 kernel.sched_min_granularity_ns=1000000
 kernel.sched_wakeup_granularity_ns=1500000
-
-# [网络吞吐优化] 提高软中断处理预算
 net.core.netdev_budget=1000
 net.core.netdev_budget_usecs=10000
+EOF
 
 # --- 4. 系统内核优化 (全量对齐) ---
 
@@ -130,10 +131,6 @@ net.core.netdev_budget_usecs=10000
 cat >> package/base-files/files/etc/sysctl.conf <<EOF
 net.core.default_qdisc=fq
 net.ipv4.tcp_congestion_control=bbr
-kernel.sched_latency_ns=8000000
-net.core.netdev_budget=1000
-vm.vfs_cache_pressure=40
-vm.min_free_kbytes=20480
 EOF
 
 # 物理 HNAT (PPE) 开启逻辑注入
