@@ -20,7 +20,6 @@ git clone --depth 1 -b openwrt-24.10 https://github.com/sbwml/luci-theme-argon p
 git clone --depth=1 -b master https://github.com/NicolasMe9907/luci-theme-kucat package/luci-theme-kucat
 # git clone --depth=1 -b master https://github.com/sirpdboy/luci-app-kucat-config package/luci-app-kucat-config
 git clone --depth=1 -b main https://github.com/NicolasMe9907/luci-app-advancedplus  package/luci-app-advancedplus
-
 git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora package/luci-theme-aurora
 echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config
 
@@ -30,7 +29,7 @@ find package/luci-theme-*/* -type f -print | grep '/root/etc/uci-defaults/' | wh
 done
 
 # 设置默认主题
-default_theme='kucat'
+default_theme='aurora'
 sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/config/luci
 
 # 強制給予 uci-defaults 腳本執行權限，防止雲端編譯權限丟失
