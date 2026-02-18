@@ -141,24 +141,7 @@ modprobe crypto_safexcel 2>/dev/null' package/base-files/files/etc/rc.local
 
 # --- 5. 分机型适配与配置固化 ---
 
-#!/bin/bash
-
-# --- [ 1. eMMC 物理分区暴力挂载补丁 ] ---
-# 强制注入 rc.local，解决 fstools 找不到 rootfs_data 的“失忆症”
-cat << 'EOF' > package/base-files/files/etc/rc.local
-# 如果发现 overlay 依然挂在内存 tmpfs，说明物理分区未格式化
-if [ "$(mount | grep 'overlayfs:/tmp/root')" ]; then
-    # 尝试寻找 eMMC 的大容量数据分区（通常是最后一个）
-    TARGET_PART=$(lsblk -l | grep mmcblk0 | tail -n 1 | awk '{print "/dev/"$1}')
-    if [ -b "$TARGET_PART" ]; then
-        # 强制执行物理装修：格式化并打上 rootfs_data 标签
-        /usr/sbin/mkfs.f2fs -f -l rootfs_data "$TARGET_PART" && reboot
-    fi
-fi
-exit 0
-EOF
-
-# --- [ 2. RPS/RFS 动态分型优化矩阵 ] ---
+# --- [ 1. RPS/RFS 动态分型优化矩阵 ] ---
 # 针对 MT7986 (4核) 和 MT7981 (2核) 进行中断与流控的物理隔离
 cat << 'EOF' > package/base-files/files/etc/init.d/rps_optimize
 #!/bin/sh /etc/rc.common
