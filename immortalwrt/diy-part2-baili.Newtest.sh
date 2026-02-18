@@ -174,7 +174,7 @@ chmod +x package/base-files/files/etc/init.d/rps_optimize
 # 物理合闸：加入开机自启
 ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
 
-# --- [3. 分机型精准调优逻辑 (解决 eMMC 波动与 NAND 压榨]---
+# --- [2. 分机型精准调优逻辑 (解决 eMMC 波动与 NAND 压榨]---
 
 if grep -iq "rax3000m-emmc\|xr30-emmc\|jdcloud_re-cp-03" .config; then
     # 【eMMC 狂暴适配版】针对超频后的 I/O 瓶颈优化
