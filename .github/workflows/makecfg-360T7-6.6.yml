@@ -12,13 +12,14 @@ on:
         default: 'true'
 
 env:
-#  REPO_URL: https://github.com/NicolasMe9907/immortalwrt-mt798x-6.6.git
+  #REPO_URL: https://github.com/NicolasMe9907/immortalwrt-mt798x-6.6.git
   REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x-6.6.git
   REPO_BRANCH: openwrt-24.10-6.6
   FEEDS_CONF: immortalwrt/feeds.conf.default
   DEVICE_NAME: Qihoo-360T7
   FILES: immortalwrt/files
-  CONFIG_FILE: immortalwrt/.config.mt7981.All.bak
+  #CONFIG_FILE: immortalwrt/.config.mt7981.All.bak
+  CONFIG_FILE: immortalwrt/.config.360T7-Openwrt-24.10-6.6.bak
   DIY_P1_SH: immortalwrt/diy-part1.sh
   DIY_P2_SH: immortalwrt/diy-part2-T7.2305.sh
   TZ: Asia/Shanghai
