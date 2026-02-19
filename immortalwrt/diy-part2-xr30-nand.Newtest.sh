@@ -102,76 +102,38 @@ git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
-# 唤醒 SafeXcel 硬件引擎编译参数
+# 1. 喚醒硬件引擎編譯參數 (全量開啟 SafeXcel 優化)
+# 直接修改全局 Target 配置，讓編譯器輸出針對 Cortex-A53 深度優化的二進制文件
 sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' include/target.mk
 sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
 
-# 锁定高性能模式与硬解模块默认加载
+# 2. 定向注入硬解模塊與性能模式
+# 根據你的 .config 邏輯，直接追加入編譯配置中
 cat >> .config <<EOF
 CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y
 CONFIG_PACKAGE_kmod-crypto-aes=y
 CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
 CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
+# 四合一模式必選：確保硬件中繼加速模塊入庫
+CONFIG_PACKAGE_kmod-mtk-eth-hw-offload=y
 EOF
+
+# 3. 如果是針對 MT7986 (四核)，可以進一步釋放算力權限
+if grep -q "CONFIG_TARGET_mediatek_filogic_DEVICE_mediatek_mt7986" .config; then
+    echo "CONFIG_NR_CPUS=4" >> .config
+    # 這裡可以加入更多針對四核 A53 的專屬內核參數
+fi
 
 # --- 4. 系统内核优化 (全量对齐) ---
 
- --- [ 1. RPS/RFS 动态分型优化矩阵 ] ---
-# 针对 MT7986 (4核) 和 MT7981 (2核) 进行中断与流控的物理隔离
-cat << 'EOF' > package/base-files/files/etc/init.d/rps_optimize
-#!/bin/sh /etc/rc.common
-START=99
+# 定义文件路径变量
+SYSCTL_PATH="package/base-files/files/etc/sysctl.conf"
 
-start() {
-    CPU_CORES=$(grep -c ^processor /proc/cpuinfo)
-    
-    # 强制合闸：设置 RFS 总表容量
-    echo "32768" > /proc/sys/net/core/rps_sock_flow_entries
-    
-    if [ "$CPU_CORES" -eq 4 ]; then
-        # [MT7986 四核专用]：将中断留在 CPU0，将 RPS 负载分发到 CPU1,2,3 (掩码 E, 即 1110)
-        MASK="e"
-    else
-        # [MT7981 双核专用]：将中断留在 CPU0，将负载分发到 CPU1 (掩码 2, 即 10)
-        MASK="2"
-    fi
+# 1. 物理級性能解鎖 (通用)
+sed -i 's/CONFIG_PACKAGE_luci-app-turboacc=y/CONFIG_PACKAGE_luci-app-turboacc=n/g' .config
+sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
 
-    # 遍历所有物理网卡，注入电子脚镣
-    for dev in /sys/class/net/eth* /sys/class/net/lan* /sys/class/net/wan*; do
-        [ -d "$dev" ] || continue
-        echo "$MASK" > "$dev/queues/rx-0/rps_cpus"
-        echo "4096" > "$dev/queues/rx-0/rps_flow_cnt"
-    done
-}
-EOF
-
-chmod +x package/base-files/files/etc/init.d/rps_optimize
-# 物理合闸：加入开机自启
-ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
-
-# A. 强制开启内核的 CPU 频率调节器并锁定高性能模式
-echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
-echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
-
-# B.统一注入 sysctl 参数 (BBR + 调度优化)
-cat >> package/base-files/files/etc/sysctl.conf <<EOF
-net.core.default_qdisc=fq
-net.ipv4.tcp_congestion_control=bbr
-vm.vfs_cache_pressure=40
-vm.min_free_kbytes=20480
-EOF
-
-# C.[ 内核调度调优：针对 A53 1.6&2.3GHz 优化 缩短调度周期，匹配高频心跳，降低 Hy2 延迟|[网络吞吐优化] 提高软中断处理预算 ]
-# 使用 append 模式写入 sysctl.conf
-cat << 'EOF' >> package/base-files/files/etc/sysctl.conf
-kernel.sched_latency_ns=8000000
-kernel.sched_min_granularity_ns=1000000
-kernel.sched_wakeup_granularity_ns=1500000
-net.core.netdev_budget=1000
-net.core.netdev_budget_usecs=10000
-EOF
-
-# D.物理 HNAT (PPE) 开启逻辑注入
+# 2.物理 HNAT (PPE) 开启逻辑注入
 sed -i '/exit 0/i \
 sysctl -w net.netfilter.nf_flow_table_hw=1 \
 for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done \
@@ -179,45 +141,25 @@ modprobe crypto_safexcel 2>/dev/null' package/base-files/files/etc/rc.local
 
 # --- 5. 分机型适配与配置固化 ---
 
-# a. 分机型精准调优逻辑 (解决 eMMC 波动与 NAND 压榨) ---
-
+# a. 分機型精準注入 (寫入固件靜態配置)
 if grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
-    # 【eMMC 狂暴适配版】针对超频后的 I/O 瓶颈优化
-    echo "# 1.65GHz Overclocked & eMMC Balanced" >> package/base-files/files/etc/sysctl.conf
-    # 压榨 Cache 到 40 (高频 CPU 处理回收极快)，保留 B站秒开快感
-    echo "vm.vfs_cache_pressure=40" >> package/base-files/files/etc/sysctl.conf
-    # 免死金牌：预留 20MB 物理内存，确保 1.65G 下无线驱动 DMA 不断流
-    echo "vm.min_free_kbytes=20480" >> package/base-files/files/etc/sysctl.conf
-    # 缩短脏数据回写周期，防止 eMMC 瞬间 I/O 阻塞导致网速波动
-    echo "vm.dirty_expire_centisecs=1500" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.dirty_writeback_centisecs=300" >> package/base-files/files/etc/sysctl.conf
-
+    # eMMC 狂暴適配：縮短回寫週期，防止 I/O 阻塞導致網速波動
+    cat >> $SYSCTL_PATH <<EOF
+vm.vfs_cache_pressure=40
+vm.dirty_expire_centisecs=1500
+vm.dirty_writeback_centisecs=300
+EOF
 elif grep -iq "360t7\|xr30-nand" .config; then
-    # 【NAND 极致压榨版】
-    echo "# 1.65GHz NAND Extreme Mode" >> package/base-files/files/etc/sysctl.conf
-    # 开启透明大页，减少超频后的 TLB 寻址开销
-    echo "kernel.mm.transparent_hugepages.enabled=always" >> package/base-files/files/etc/sysctl.conf
-    # NAND 机型内存相对宽裕，预留 16MB 即可
-    echo "vm.min_free_kbytes=16384" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.swappiness=10" >> package/base-files/files/etc/sysctl.conf
-
+    # NAND 模式：開啟透明大頁
+    echo "kernel.mm.transparent_hugepages.enabled=always" >> $SYSCTL_PATH
+    echo "vm.swappiness=10" >> $SYSCTL_PATH
 elif grep -iq "tr3000v1" .config; then
-    # 【TR3000v1 机皇专属】
-    echo "# TR3000v1 Export Extreme" >> package/base-files/files/etc/sysctl.conf
-    # 极致 Cache 深度，10 为极限，配合 1.6G+ 暴力主频
-    echo "vm.vfs_cache_pressure=10" >> package/base-files/files/etc/sysctl.conf
-    echo "kernel.nmi_watchdog=0" >> package/base-files/files/etc/sysctl.conf
+    # TR3000v1：機皇專屬極致 Cache
+    echo "vm.vfs_cache_pressure=10" >> $SYSCTL_PATH
 fi
 
-# b. 物理级性能解锁 (通用) ---
-# 开启内核 RCU 卸载，减少系统琐事对高频核心的打扰
-echo "kernel.rcu_nocb_poll=1" >> package/base-files/files/etc/sysctl.conf
-# 根据 .config 自动检测并删除冗余监控插件 (清理内耗)
-sed -i 's/CONFIG_PACKAGE_luci-app-turboacc=y/CONFIG_PACKAGE_luci-app-turboacc=n/g' .config
-sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
-
-# c.拷贝自定义 DIY 目录 (如果存在)
-[ -d "${GITHUB_WORKSPACE}/immortalwrt/diy" ] && cp -Rf ${GITHUB_WORKSPACE}/immortalwrt/diy/* .
+# b. 注入 RCU 核心卸載 (通用內核調優)
+echo "kernel.rcu_nocb_poll=1" >> $SYSCTL_PATH
 
 # 最后的逻辑收束
 ./scripts/feeds update -a && ./scripts/feeds install -a
