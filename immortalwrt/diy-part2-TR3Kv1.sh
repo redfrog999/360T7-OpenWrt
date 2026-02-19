@@ -147,7 +147,7 @@ EOF
 
 chmod +x package/base-files/files/etc/init.d/rps_optimize
 # 物理合闸：加入开机自启
-ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
+ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/rps_optimize
 
 # 1. 物理主权：MT7981 1.6GHz 频率释放 ---
 
