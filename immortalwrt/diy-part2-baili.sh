@@ -103,117 +103,79 @@ git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
-# 1. 喚醒硬件引擎編譯參數 (全量開啟 SafeXcel 優化)
-# 直接修改全局 Target 配置，讓編譯器輸出針對 Cortex-A53 深度優化的二進制文件
+# 1. 變量定義先行 (解決 ambiguous redirect 瘀堵點)
+SYSCTL_PATH="package/base-files/files/etc/sysctl.conf"
+
+# 2. 硬件引擎編譯優化 (SafeXcel & A53 指令集喚醒)
 sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' include/target.mk
 sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
 
-# 2. 定向注入硬解模塊與性能模式
-# 根據你的 .config 邏輯，直接追加入編譯配置中
 cat >> .config <<EOF
 CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y
 CONFIG_PACKAGE_kmod-crypto-aes=y
 CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
 CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
-# 四合一模式必選：確保硬件中繼加速模塊入庫
 CONFIG_PACKAGE_kmod-mtk-eth-hw-offload=y
 EOF
 
-# 3. 如果是針對 MT7986 (四核)，可以進一步釋放算力權限
-# 在原本的基礎上，針對 MT7986 的四核矩陣進行深度定序
+# 3. MT7986 四核狂暴加壓模式
 if grep -q "CONFIG_TARGET_mediatek_filogic_DEVICE_mediatek_mt7986" .config; then
-    logger -t "DIY2" "檢測到 MT7986，開啟四核矩陣狂暴模式..."
-    
-    # 1. 釋放核心上限
+    logger -t "DIY2" "檢測到 MT7986，開啟四核矩陣與高頻調度優化..."
     echo "CONFIG_NR_CPUS=4" >> .config
-    
-    # 2. 開啟內核搶佔 (Low-Latency Desktop 模式)
-    # 讓 MT7986 對 Hy2/OpenClash 的響應達到微秒級，不再是簡單的 O2 優化
     echo "CONFIG_PREEMPT=y" >> .config
-    echo "CONFIG_PREEMPT_RT=n" >> .config # 保持標準搶佔，但確保響應
-    echo "CONFIG_HZ_1000=y" >> .config # 提高內核時鐘頻率到 1000Hz
-    
-    # 3. 針對 4 核 A53 的編譯器指令優化 (加強循環展開)
+    echo "CONFIG_HZ_1000=y" >> .config
+    # 超頻版極致編譯優化
     sed -i 's/-O2/-O3 -funroll-loops -fomit-frame-pointer/g' include/target.mk
-    
-    # 4. 針對 MT7986 存儲介質（通常為 NAND/eMMC）的 I/O 加壓
+    # 內核 I/O 加壓
     cat >> $SYSCTL_PATH <<EOF
-# 提高文件句柄上限，應對高併發
 fs.file-max=1000000
-# 縮短內核對 RCU 的寬限期，加速內存回收
 kernel.rcu_expedited=1
 kernel.rcu_normal_after_boot=1
-# 針對四核的網絡讀寫緩衝區加倍 (32MB)
 net.core.rmem_max=33554432
 net.core.wmem_max=33554432
 EOF
 fi
 
-# --- 4. 系统内核优化 (全量对齐) ---
-
-# 定义文件路径变量
-SYSCTL_PATH="package/base-files/files/etc/sysctl.conf"
-
-# 1. 物理級性能解鎖 (通用)
+# 4. 物理級性能解鎖與冗餘清理 (通用)
 sed -i 's/CONFIG_PACKAGE_luci-app-turboacc=y/CONFIG_PACKAGE_luci-app-turboacc=n/g' .config
 sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
 
-# 2.物理 HNAT (PPE) 开启逻辑注入
-sed -i '/exit 0/i \
-sysctl -w net.netfilter.nf_flow_table_hw=1 \
-for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done \
-modprobe crypto_safexcel 2>/dev/null' package/base-files/files/etc/rc.local
+# 5. 統一注入核心參數 (BBR + RCU 卸載)
+cat >> $SYSCTL_PATH <<EOF
+net.ipv4.tcp_congestion_control=bbr
+net.ipv4.tcp_fastopen=3
+kernel.rcu_nocb_poll=1
+EOF
 
-# --- 5. 分机型适配与配置固化 ---
-
-# a. 分機型精準注入 (寫入固件靜態配置)
+# --- 4. 分机型适配与配置固化 ---
 if grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
-    # eMMC 狂暴適配：縮短回寫週期，防止 I/O 阻塞導致網速波動
     cat >> $SYSCTL_PATH <<EOF
 vm.vfs_cache_pressure=40
 vm.dirty_expire_centisecs=1500
 vm.dirty_writeback_centisecs=300
+vm.min_free_kbytes=20480
 EOF
 elif grep -iq "360t7\|xr30-nand" .config; then
-    # NAND 模式：開啟透明大頁
     echo "kernel.mm.transparent_hugepages.enabled=always" >> $SYSCTL_PATH
     echo "vm.swappiness=20" >> $SYSCTL_PATH
+    echo "vm.min_free_kbytes=16384" >> $SYSCTL_PATH
 elif grep -iq "tr3000v1" .config; then
-    # TR3000v1：機皇專屬極致 Cache
     echo "vm.vfs_cache_pressure=10" >> $SYSCTL_PATH
+    echo "vm.min_free_kbytes=20480" >> $SYSCTL_PATH
 fi
 
-# --- 4. 系统内核优化 (全量对齐) ---
-
-# 统一注入 sysctl 参数 (BBR + 调度优化)
-cat >> package/base-files/files/etc/sysctl.conf <<EOF
-net.ipv4.tcp_congestion_control=bbr
-net.ipv4.tcp_fastopen=3
+# --- 5. 系统内核优化 (全量对齐) ---
+# 清理可能存在的舊 exit 0 確保注入位置正確
+sed -i '/exit 0/d' package/base-files/files/etc/rc.local
+cat >> package/base-files/files/etc/rc.local <<EOF
+sysctl -w net.netfilter.nf_flow_table_hw=1
+for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "\$i/scaling_governor"; done
+modprobe crypto_safexcel 2>/dev/null
+exit 0
 EOF
 
-# 物理 HNAT (PPE) 开启逻辑注入
-sed -i '/exit 0/i \
-sysctl -w net.netfilter.nf_flow_table_hw=1 \
-for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done \
-modprobe crypto_safexcel 2>/dev/null' package/base-files/files/etc/rc.local
-
-# --- 3. 物理级性能解锁 (通用) ---
-# 开启内核 RCU 卸载，减少系统琐事对高频核心的打扰
-echo "kernel.rcu_nocb_poll=1" >> package/base-files/files/etc/sysctl.conf
-
-# 根据 .config 自动检测并删除冗余监控插件 (清理内耗)
-sed -i 's/CONFIG_PACKAGE_luci-app-turboacc=y/CONFIG_PACKAGE_luci-app-turboacc=n/g' .config
-sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
-
-# 針對多核 A53 的定頻邏輯注入 rc.local
-sed -i '/exit 0/i \
-for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done' package/base-files/files/etc/rc.local
-fi
-
-# 拷贝自定义 DIY 目录 (如果存在)
+# --- 6. 最後的收束
 [ -d "${GITHUB_WORKSPACE}/immortalwrt/diy" ] && cp -Rf ${GITHUB_WORKSPACE}/immortalwrt/diy/* .
-
-# 最后的逻辑收束
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
 
