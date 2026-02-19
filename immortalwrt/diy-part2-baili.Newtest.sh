@@ -172,7 +172,7 @@ EOF
 
 chmod +x package/base-files/files/etc/init.d/rps_optimize
 # 物理合闸：加入开机自启
-ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
+ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/rps_optimize
 
 # --- [2. 分机型精准调优逻辑 (解决 eMMC 波动与 NAND 压榨]---
 
