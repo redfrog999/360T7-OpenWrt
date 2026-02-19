@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt JDBaili Openwrt-24.10-6.6-NewTest
+name: OpenWrt JDBaili Openwrt-24.10-6.6-Model2
 
 on:
   repository_dispatch:
