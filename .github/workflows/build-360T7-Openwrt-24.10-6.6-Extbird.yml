@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt 360T7 Openwrt-24.10-6.6-NewTest
+name: OpenWrt 360T7 Openwrt-24.10-6.6-Extbird
 
 on:
   repository_dispatch:
@@ -16,8 +16,8 @@ on:
 #    - cron: 0 8 * * 5
 
 env:
-  REPO_URL: https://github.com/NicolasMe9907/immortalwrt-mt798x-6.6.git
-  # REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x-6.6.git
+  #EPO_URL: https://github.com/NicolasMe9907/immortalwrt-mt798x-6.6.git
+  REPO_URL: https://github.com/redfrog999/immortalwrt-mt798x-6.6.git
   REPO_BRANCH: openwrt-24.10-6.6
   DEVICE_NAME: Qihoo-360T7
   FILES: immortalwrt/files
