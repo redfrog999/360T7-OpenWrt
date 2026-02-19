@@ -5,7 +5,7 @@ echo "========================="
 
 # --- 0. 基础环境清理与物理去瘀 ---
 # 修改默认IP
-sed -i 's/192.168.6.1/192.168.12.1/g' package/base-files/files/bin/config_generate
+sed -i 's/192.168.6.1/192.168.25.1/g' package/base-files/files/bin/config_generate
 
 # 彻底清理 PassWall、老旧 OpenClash 和残留核心库 (防止逻辑冲突)
 rm -rf feeds/packages/net/{xray*,v2ray*,sing-box,hysteria*,shadowsocks*,trojan*,clash*}
