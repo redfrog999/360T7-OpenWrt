@@ -147,7 +147,7 @@ EOF
 
 chmod +x package/base-files/files/etc/init.d/rps_optimize
 # 物理合闸：加入开机自启
-ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
+ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/rps_optimize
 
 # A. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
