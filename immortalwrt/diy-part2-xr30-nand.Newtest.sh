@@ -116,6 +116,39 @@ EOF
 
 # --- 4. 系统内核优化 (全量对齐) ---
 
+ --- [ 1. RPS/RFS 动态分型优化矩阵 ] ---
+# 针对 MT7986 (4核) 和 MT7981 (2核) 进行中断与流控的物理隔离
+cat << 'EOF' > package/base-files/files/etc/init.d/rps_optimize
+#!/bin/sh /etc/rc.common
+START=99
+
+start() {
+    CPU_CORES=$(grep -c ^processor /proc/cpuinfo)
+    
+    # 强制合闸：设置 RFS 总表容量
+    echo "32768" > /proc/sys/net/core/rps_sock_flow_entries
+    
+    if [ "$CPU_CORES" -eq 4 ]; then
+        # [MT7986 四核专用]：将中断留在 CPU0，将 RPS 负载分发到 CPU1,2,3 (掩码 E, 即 1110)
+        MASK="e"
+    else
+        # [MT7981 双核专用]：将中断留在 CPU0，将负载分发到 CPU1 (掩码 2, 即 10)
+        MASK="2"
+    fi
+
+    # 遍历所有物理网卡，注入电子脚镣
+    for dev in /sys/class/net/eth* /sys/class/net/lan* /sys/class/net/wan*; do
+        [ -d "$dev" ] || continue
+        echo "$MASK" > "$dev/queues/rx-0/rps_cpus"
+        echo "4096" > "$dev/queues/rx-0/rps_flow_cnt"
+    done
+}
+EOF
+
+chmod +x package/base-files/files/etc/init.d/rps_optimize
+# 物理合闸：加入开机自启
+ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
+
 # A. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
 echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
