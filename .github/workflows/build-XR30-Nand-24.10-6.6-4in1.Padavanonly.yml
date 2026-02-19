@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt XR30 Nand Openwrt-24.10-6.6-NewTest
+name: OpenWrt XR30 Nand Openwrt-24.10-6.6-4in1
 
 on:
   repository_dispatch:
