@@ -103,139 +103,136 @@ git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
-# =========================================================
-# 1. 指令集重构：回归物理硬解 (去 LSE，留 Crypto+CRC)
-# =========================================================
-# 剔除 -Os 带来的性能断流，开启针对 A53 的 O2 深度优化
+# 唤醒 SafeXcel 硬件引擎编译参数
 sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' include/target.mk
 sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
 
+# 锁定高性能模式与硬解模块默认加载
+cat >> .config <<EOF
+CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y
+CONFIG_PACKAGE_kmod-crypto-aes=y
+CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
+CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
+EOF
+
+# --- 4. 系统内核优化 (全量对齐) ---
+
+ #!/bin/bash
+
 # =========================================================
-# 2. 内核特性：kTLS 硬件卸载与 BPF 满血版
+# 2. 内核引擎合闸：PPE + WED + ZSTD
 # =========================================================
 KERNEL_CONF="target/linux/mediatek/filogic/config-6.6"
-
 cat >> $KERNEL_CONF <<EOF
-# [kTLS 核心合闸：翻墙性能倍增器]
-CONFIG_TLS=y
-CONFIG_TLS_DEVICE=y
-CONFIG_TLS_TOE=y
-
-# [硬件加速矩阵：MTK 物理引擎全开]
-CONFIG_CRYPTO_DEV_SAFEXCEL=y
 CONFIG_NET_MEDIATEK_SOC_WED=y
 CONFIG_NET_MEDIATEK_SOC_PPE=y
-
-# [高性能网络基座：Hy2 专用低延迟 BPF]
-CONFIG_BPF_JIT_ALWAYS_ON=y
-CONFIG_HAVE_EBPF_JIT=y
-CONFIG_DEBUG_INFO_BTF=y
-CONFIG_NET_XGRESS=y
-CONFIG_NET_CLS_BPF=y
-
-# [内存策略：ZSTD 压缩提升 4-in-1 容错率]
 CONFIG_ZRAM=y
 CONFIG_ZRAM_DEF_COMP_ZSTD=y
+CONFIG_RCU_NOCB_CPU=y
+CONFIG_RCU_NOCB_CPU_ALL=y
 EOF
 
 # =========================================================
-# 3. 系统调度调优：匹配 1.6GHz 巅峰频率
-# =========================================================
-SYSCTL_PATH="package/base-files/files/etc/sysctl.conf"
-
-cat >> $SYSCTL_PATH <<EOF
-# [内核调度：缩短周期，降低 Hy2 延迟]
-kernel.sched_latency_ns=8000000
-kernel.sched_min_granularity_ns=1000000
-kernel.sched_wakeup_granularity_ns=1500000
-
-# [吞吐优化：提高软中断处理预算，应对 2.5G 暴量]
-net.core.netdev_budget=1000
-net.core.netdev_budget_usecs=10000
-
-# [BBRv3 + FQ 巅峰配置]
-net.core.default_qdisc=fq
-net.ipv4.tcp_congestion_control=bbr
-net.ipv4.tcp_fastopen=3
-net.ipv4.tcp_low_latency=1
-
-# [通用调度：减少琐事对高频核心的打扰]
-kernel.rcu_nocb_poll=1
-EOF
-
-# =========================================================
-# 4. 分机型精准调优：解决 eMMC 波动与 NAND 压榨 (已补回)
-# =========================================================
-if grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
-    # 【eMMC 狂暴适配版】
-    cat >> $SYSCTL_PATH <<EOF
-# 1.65GHz Overclocked & eMMC Balanced
-vm.vfs_cache_pressure=40
-vm.min_free_kbytes=20480
-vm.dirty_expire_centisecs=1500
-vm.dirty_writeback_centisecs=300
-EOF
-elif grep -iq "360t7\|xr30-nand" .config; then
-    # 【NAND 极致压榨版】
-    cat >> $SYSCTL_PATH <<EOF
-# 1.65GHz NAND Extreme Mode
-kernel.mm.transparent_hugepages.enabled=always
-vm.min_free_kbytes=16384
-vm.swappiness=10
-EOF
-elif grep -iq "tr3000v1" .config; then
-    # 【TR3000v1 机皇专属】
-    cat >> $SYSCTL_PATH <<EOF
-# TR3000v1 Export Extreme
-vm.vfs_cache_pressure=10
-kernel.nmi_watchdog=0
-EOF
-fi
-
-# =========================================================
-# 5. 运行态矩阵：IRQ 隔离与 kTLS 硬件激活
+# 3. 注入四核矩阵调度脚本 (核心 DIY2 逻辑)
 # =========================================================
 mkdir -p package/base-files/files/etc/init.d
-
-cat > package/base-files/files/etc/init.d/matrix_logic <<EOF
+cat > package/base-files/files/etc/init.d/matrix_optimize <<EOF
 #!/bin/sh /etc/rc.common
 START=99
 
 boot() {
-    CPU_COUNT=\$(grep -c ^processor /proc/cpuinfo)
+    # 锁定 2.3G 性能模式
+    for i in 0 1 2 3; do
+        echo "performance" > /sys/devices/system/cpu/cpu\$i/cpufreq/scaling_governor 2>/dev/null
+    done
 
-    # 激活 kTLS 与 SafeXcel 硬件逻辑
-    modprobe tls 2>/dev/null
-    echo 1 > /sys/module/tls/parameters/tls_hw 2>/dev/null
-    modprobe crypto_safexcel 2>/dev/null
-    echo 1 > /proc/sys/net/netfilter/nf_flow_table_hw 2>/dev/null
+    # 识别 IRQ (MT7986 精准匹配)
+    ETH_IRQ=\$(grep "mtk-network" /proc/interrupts | cut -d: -f1 | tr -d ' ')
+    WED_IRQ=\$(grep "mtk_wed" /proc/interrupts | cut -d: -f1 | tr -d ' ')
+    CRYPTO_IRQ=\$(grep "safexcel" /proc/interrupts | awk -F: '{print \$1}' | tr -d ' ')
 
-    # 精准 IRQ 分配
-    ETH_IRQ=\$(grep -m1 "mtk-network" /proc/interrupts | cut -d: -f1 | tr -d ' ')
-    CRYPTO_IRQ=\$(grep -E "safexcel|eip" /proc/interrupts | awk -F: '{print \$1}' | tr -d ' ')
+    # Core 1 (Mask 2): 承载 IO 硬件中断
+    for irq in \$ETH_IRQ \$WED_IRQ; do
+        echo "2" > "/proc/irq/\$irq/smp_affinity"
+    done
 
-    if [ "\$CPU_COUNT" -eq 4 ]; then
-        for irq in \$ETH_IRQ; do echo 3 > "/proc/irq/\$irq/smp_affinity"; done
-        for irq in \$CRYPTO_IRQ; do echo c > "/proc/irq/\$irq/smp_affinity"; done
-        for x in /sys/class/net/*/queues/rx-*/rps_cpus; do echo c > "\$x"; done
-    else
-        for irq in \$ETH_IRQ; do echo 1 > "/proc/irq/\$irq/smp_affinity"; done
-        for irq in \$CRYPTO_IRQ; do echo 2 > "/proc/irq/\$irq/smp_affinity"; done
-        for x in /sys/class/net/*/queues/rx-*/rps_cpus; do echo 2 > "\$x"; done
-    fi
+    # Core 2 & 3 (Mask C): 承载加解密算力簇
+    for irq in \$CRYPTO_IRQ; do
+        echo "c" > "/proc/irq/\$irq/smp_affinity"
+    done
 
-    # 锁定性能模式
-    for i in \$(seq 0 \$((\$CPU_COUNT - 1))); do
-        echo "performance" > /sys/devices/system/cpu/cpu\$i/cpufreq/scaling_governor
+    # RPS/XPS 泵送：流量从 IO 层(Core 1) 泵给 算力层(Core 2&3)
+    for x in /sys/class/net/eth*/queues/rx-*/rps_cpus; do echo "c" > "\$x"; done
+    for x in /sys/class/net/eth*/queues/tx-*/xps_cpus; do echo "c" > "\$x"; done
+    
+    # 提升内核 Flow 预算
+    echo "32768" > /proc/sys/net/core/rps_sock_flow_entries
+    for x in /sys/class/net/eth*/queues/rx-*/rps_flow_cnt; do echo "4096" > "\$x"; done
+
+    # PPE 硬件全开
+    echo 1 > /sys/kernel/debug/hnat/all_external 2>/dev/null
+    echo 1 > /sys/kernel/debug/hnat/all_internal 2>/dev/null
+
+    # RCU 卸载绑定到 Core 2,3
+    for i in \$(pgrep rcu_nocb); do
+        taskset -pc c \$i
     done
 }
 EOF
 
-chmod +x package/base-files/files/etc/init.d/matrix_logic
+chmod +x package/base-files/files/etc/init.d/matrix_optimize
 
 # =========================================================
-# 6. 编译资产收束
+# 4. 编译资产收束
 # =========================================================
+sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7981-SMP-Turbo-v1.0'/g" package/base-files/files/etc/openwrt_release
+./scripts/feeds update -a && ./scripts/feeds install -a
+make defconfig
+chmod +x package/base-files/files/etc/init.d/rps_optimize
+# 物理合闸：加入开机自启
+ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
+
+# a. 强制开启内核的 CPU 频率调节器并锁定高性能模式
+echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
+echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
+
+# b.统一注入 sysctl 参数 (BBR + 调度优化)
+cat >> package/base-files/files/etc/sysctl.conf <<EOF
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+vm.vfs_cache_pressure=40
+vm.min_free_kbytes=20480
+EOF
+
+# c.[ 内核调度调优：针对 A53 1.6&2.3GHz 优化 缩短调度周期，匹配高频心跳，降低 Hy2 延迟|[网络吞吐优化] 提高软中断处理预算 ]
+# 使用 append 模式写入 sysctl.conf
+cat << 'EOF' >> package/base-files/files/etc/sysctl.conf
+kernel.sched_latency_ns=8000000
+kernel.sched_min_granularity_ns=1000000
+kernel.sched_wakeup_granularity_ns=1500000
+net.core.netdev_budget=1000
+net.core.netdev_budget_usecs=10000
+EOF
+
+# d.物理 HNAT (PPE) 开启逻辑注入
+sed -i '/exit 0/i \
+sysctl -w net.netfilter.nf_flow_table_hw=1 \
+for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done \
+modprobe crypto_safexcel 2>/dev/null' package/base-files/files/etc/rc.local
+
+# B. 物理级性能解锁 (通用) ---
+# 开启内核 RCU 卸载，减少系统琐事对高频核心的打扰
+echo "kernel.rcu_nocb_poll=1" >> package/base-files/files/etc/sysctl.conf
+
+# C.根据 .config 自动检测并删除冗余监控插件 (清理内耗)
+sed -i 's/CONFIG_PACKAGE_luci-app-turboacc=y/CONFIG_PACKAGE_luci-app-turboacc=n/g' .config
+sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
+
+# D.拷贝自定义 DIY 目录 (如果存在)
+[ -d "${GITHUB_WORKSPACE}/immortalwrt/diy" ] && cp -Rf ${GITHUB_WORKSPACE}/immortalwrt/diy/* .
+
+# 最后的逻辑收束
+
 # 确保硬件加速模块入库
 cat >> .config <<EOF
 CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y
@@ -243,8 +240,8 @@ CONFIG_PACKAGE_kmod-crypto-aes=y
 CONFIG_PACKAGE_kmod-mtk-eth-hw-offload=y
 EOF
 
-sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-Matrix-4in1-v3.5-Turbo'/g" package/base-files/files/etc/openwrt_release
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
 
-echo "✅ DIY2 全量逻辑合闸完成，等待起飞！"
+echo "========================="
+echo "✅ DIY2 逻辑重组完成，等待咆哮！"
