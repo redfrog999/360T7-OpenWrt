@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: OpenWrt TR3Kv1 Openwrt-24.10-6.6-4in1
+name: OpenWrt TR3Kv1 Openwrt-24.10-6.6-6in1
 
 on:
   repository_dispatch:
@@ -23,7 +23,7 @@ env:
   FEEDS_CONF: immortalwrt/feeds.conf.default
   CONFIG_FILE: immortalwrt/config.TR3Kv1-Openwrt-24.10-6.6.bak
   DIY_P1_SH: immortalwrt/diy-part1-TR3Kv1.sh
-  DIY_P2_SH: immortalwrt/diy-part2-TR3Kv1.4in1.sh
+  DIY_P2_SH: immortalwrt/diy-part2-TR3Kv1.6in1.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: false
