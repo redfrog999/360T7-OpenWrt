@@ -185,9 +185,9 @@ ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
 
 # 1. 物理主权：MT7981 1.6GHz 频率释放 ---
 
-# a. 修改设备树，将默认频率改为 1.6G (1600MHz)
+# a. 修改设备树，将默认频率改为 1.65G (1650MHz)
 # 针对大部分 MT7981 源码结构，直接替换频率定义
-find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1600000/g' 2>/dev/null
+find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1650000/g' 2>/dev/null
 
 # b. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
