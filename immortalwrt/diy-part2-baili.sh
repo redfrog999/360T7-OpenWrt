@@ -103,10 +103,6 @@ git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
-# MT7981专属修改设备树，将默认频率改为 1.6G (1600MHz)
-find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1600000/g' 2>/dev/null
-
-
 # =========================================================
 # 1. 指令集重构：回归物理硬解 (去 LSE，留 Crypto+CRC)
 # =========================================================
