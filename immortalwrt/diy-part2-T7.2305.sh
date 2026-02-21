@@ -239,9 +239,15 @@ chmod +x package/base-files/files/etc/init.d/matrix_logic
 # =========================================================
 # 6. 编译资产收束
 # =========================================================
+# 确保硬件加速模块入库
+cat >> .config <<EOF
+CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y
+CONFIG_PACKAGE_kmod-crypto-aes=y
+CONFIG_PACKAGE_kmod-mtk-eth-hw-offload=y
+EOF
+
 sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-Matrix-4in1-v3.5-Turbo'/g" package/base-files/files/etc/openwrt_release
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
 
 echo "✅ DIY2 全量逻辑合闸完成，等待起飞！"
-
