@@ -21,7 +21,7 @@ env:
   #CONFIG_FILE: immortalwrt/.config.mt7986.All.bak
   CONFIG_FILE: immortalwrt/config.jdcloud_re-cp-03-Padavanonly.24.10-6.6.bak
   DIY_P1_SH: immortalwrt/diy-part1-baili.sh
-  DIY_P2_SH: immortalwrt/diy-part2-baili.Newtest.sh
+  DIY_P2_SH: immortalwrt/diy-part2-baili.Model2.sh
   TZ: Asia/Shanghai
 
 jobs:
