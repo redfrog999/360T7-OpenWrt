@@ -220,6 +220,13 @@ sysctl -w net.netfilter.nf_flow_table_hw=1 \
 for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done \
 modprobe crypto_safexcel 2>/dev/null' package/base-files/files/etc/rc.local
 
+# =========================================================
+# A. 物理层定调：锁定 2.2GHz 巅峰主频 (MT7986 专用)
+# =========================================================
+# 警告：2.2GHz 属于极限超频，请确保散热环境与风扇冷疗已就位
+find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/2200000/g' 2>/dev/null
+find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1600000/2200000/g' 2>/dev/null
+
 # B. 物理级性能解锁 (通用) ---
 # 开启内核 RCU 卸载，减少系统琐事对高频核心的打扰
 echo "kernel.rcu_nocb_poll=1" >> package/base-files/files/etc/sysctl.conf
