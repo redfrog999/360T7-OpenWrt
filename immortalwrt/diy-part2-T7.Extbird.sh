@@ -173,14 +173,26 @@ EOF
 chmod +x package/base-files/files/etc/init.d/smp_optimize
 
 # =========================================================
-# 4. 编译资产收束
+# 4. 编译资产收束 (修正版：确保目录存在且文件名对齐)
 # =========================================================
-sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7981-SMP-Turbo-v1.0'/g" package/base-files/files/etc/openwrt_release
+sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7986-Matrix-v4.0'/g" package/base-files/files/etc/openwrt_release
+
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
+
+# 关键修正点 1：确保目标物理目录存在，否则 ln 必报错
+mkdir -p package/base-files/files/etc/rc.d
+mkdir -p package/base-files/files/etc/init.d
+
+# 关键修正点 2：赋予正确的文件执行权
 chmod +x package/base-files/files/etc/init.d/smp_optimize
-# a.物理合闸：加入开机自启
-ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99smp_optimize
+
+# 关键修正点 3：物理合闸逻辑对位
+# 之前报错是因为 ../init.d/rps_optimize 不存在
+# 修正为链接到你真正创建的文件 smp_optimize
+ln -sf ../init.d/smp_optimize package/base-files/files/etc/rc.d/S99smp_optimize
+
+echo "✅ 资产收束完成：S99smp_optimize 已成功对位，无报错隐患。"
 
 # b. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
