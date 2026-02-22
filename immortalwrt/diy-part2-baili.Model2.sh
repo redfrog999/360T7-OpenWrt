@@ -117,10 +117,15 @@ EOF
 
 # --- 4. 系统内核优化 (全量对齐) ---
 
- #!/bin/bash
+#!/bin/bash
 
 # =========================================================
-# 2. 内核引擎合闸：PPE + WED + ZSTD
+# 1. 物理层定调：锁定 2.2GHz (四核全开，同步巅峰)
+# =========================================================
+find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/2000000/2200000/g' 2>/dev/null
+
+# =========================================================
+# 2. 内核特性：合闸卸载引擎 (PPE + WED + ZSTD)
 # =========================================================
 KERNEL_CONF="target/linux/mediatek/filogic/config-6.6"
 cat >> $KERNEL_CONF <<EOF
@@ -133,54 +138,43 @@ CONFIG_RCU_NOCB_CPU_ALL=y
 EOF
 
 # =========================================================
-# 3. 注入四核矩阵调度脚本 (核心 DIY2 逻辑)
+# 3. 注入 smp_optimize：四核有序分工逻辑
 # =========================================================
 mkdir -p package/base-files/files/etc/init.d
-cat > package/base-files/files/etc/init.d/matrix_optimize <<EOF
+cat > package/base-files/files/etc/init.d/smp_optimize <<EOF
 #!/bin/sh /etc/rc.common
 START=99
 
 boot() {
-    # 锁定 2.3G 性能模式
-    for i in 0 1 2 3; do
-        echo "performance" > /sys/devices/system/cpu/cpu\$i/cpufreq/scaling_governor 2>/dev/null
-    done
+    # 锁定四核性能模式
+    for i in 0 1 2 3; do echo "performance" > /sys/devices/system/cpu/cpu\\\$i/cpufreq/scaling_governor; done
 
-    # 识别 IRQ (MT7986 精准匹配)
-    ETH_IRQ=\$(grep "mtk-network" /proc/interrupts | cut -d: -f1 | tr -d ' ')
-    WED_IRQ=\$(grep "mtk_wed" /proc/interrupts | cut -d: -f1 | tr -d ' ')
-    CRYPTO_IRQ=\$(grep "safexcel" /proc/interrupts | awk -F: '{print \$1}' | tr -d ' ')
+    # 精准识别 IRQ (使用地址匹配法避免脑雾)
+    ETH_IRQ=\\\$(grep "15100000.ethernet" /proc/interrupts | awk -F: '{print \\\$1}' | tr -d ' ' | head -n1)
+    CRYPTO_IRQ=\\\$(grep "10320000.crypto" /proc/interrupts | awk -F: '{print \\\$1}' | tr -d ' ')
 
-    # Core 1 (Mask 2): 承载 IO 硬件中断
-    for irq in \$ETH_IRQ \$WED_IRQ; do
-        echo "2" > "/proc/irq/\$irq/smp_affinity"
-    done
+    # [策略：有序分配]
+    # 1. 硬中断分配：由 Core 1, 2, 3 共同承载 (Mask E = 1110)
+    # 留出 Core 0 专门维护系统稳态和高优先级的管理任务
+    [ -n "\\\$ETH_IRQ" ] && echo "e" > "/proc/irq/\\\$ETH_IRQ/smp_affinity"
+    for irq in \\\$CRYPTO_IRQ; do echo "e" > "/proc/irq/\\\$irq/smp_affinity"; done
 
-    # Core 2 & 3 (Mask C): 承载加解密算力簇
-    for irq in \$CRYPTO_IRQ; do
-        echo "c" > "/proc/irq/\$irq/smp_affinity"
-    done
-
-    # RPS/XPS 泵送：流量从 IO 层(Core 1) 泵给 算力层(Core 2&3)
-    for x in /sys/class/net/eth*/queues/rx-*/rps_cpus; do echo "c" > "\$x"; done
-    for x in /sys/class/net/eth*/queues/tx-*/xps_cpus; do echo "c" > "\$x"; done
+    # 2. RPS/XPS 协议栈卸载：四核全参与 (Mask F = 1111)
+    # 让每一个 A53 核心都有机会处理协议栈解压和解密，实现真正的“打群架”
+    for x in /sys/class/net/eth*/queues/rx-*/rps_cpus; do echo "f" > "\\\$x"; done
+    for x in /sys/class/net/eth*/queues/tx-*/xps_cpus; do echo "f" > "\\\$x"; done
     
-    # 提升内核 Flow 预算
+    # 3. 极大化 RFS 套接字哈希表
     echo "32768" > /proc/sys/net/core/rps_sock_flow_entries
-    for x in /sys/class/net/eth*/queues/rx-*/rps_flow_cnt; do echo "4096" > "\$x"; done
+    for x in /sys/class/net/eth*/queues/rx-*/rps_flow_cnt; do echo "8192" > "\\\$x"; done
 
-    # PPE 硬件全开
+    # 4. 暴力开启 PPE 硬件加速 (减免 CPU 转发税)
     echo 1 > /sys/kernel/debug/hnat/all_external 2>/dev/null
     echo 1 > /sys/kernel/debug/hnat/all_internal 2>/dev/null
-
-    # RCU 卸载绑定到 Core 2,3
-    for i in \$(pgrep rcu_nocb); do
-        taskset -pc c \$i
-    done
 }
 EOF
 
-chmod +x package/base-files/files/etc/init.d/matrix_optimize
+chmod +x package/base-files/files/etc/init.d/smp_optimize
 
 # =========================================================
 # 4. 编译资产收束
@@ -188,9 +182,9 @@ chmod +x package/base-files/files/etc/init.d/matrix_optimize
 sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7981-SMP-Turbo-v1.0'/g" package/base-files/files/etc/openwrt_release
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
-chmod +x package/base-files/files/etc/init.d/matrix_optimize
+chmod +x package/base-files/files/etc/init.d/smp_optimize
 # 物理合闸：加入开机自启
-ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99matrix_optimize
+ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99smp_optimize
 
 # a. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
