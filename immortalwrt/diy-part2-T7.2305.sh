@@ -179,9 +179,9 @@ chmod +x package/base-files/files/etc/init.d/smp_optimize
 sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7981-SMP-Turbo-v1.0'/g" package/base-files/files/etc/openwrt_release
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
-chmod +x package/base-files/files/etc/init.d/rps_optimize
+chmod +x package/base-files/files/etc/init.d/smp_optimize
 # 物理合闸：加入开机自启
-ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
+ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99smp_optimize
 
 # 1. 物理主权：MT7981 1.6GHz 频率释放 ---
 
