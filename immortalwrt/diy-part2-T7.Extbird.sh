@@ -118,54 +118,53 @@ EOF
 
  #!/bin/bash
 
-# =========================================================
-# 2. 内核引擎合闸：PPE + WED + ZSTD
-# =========================================================
+# 1. 物理层定调：锁定 1.65GHz (确保双核都在高频运行)
+find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1650000/g' 2>/dev/null
+
+# 2. 内核重装备：强制开启所有硬件卸载特性
 KERNEL_CONF="target/linux/mediatek/filogic/config-6.6"
 cat >> $KERNEL_CONF <<EOF
+# [MTK 物理卸载合闸]
 CONFIG_NET_MEDIATEK_SOC_WED=y
 CONFIG_NET_MEDIATEK_SOC_PPE=y
+# [eBPF 与 XDP 分流器]
+CONFIG_BPF_JIT=y
+CONFIG_XDP_SOCKETS=y
+# [ZRAM 动态内存]
 CONFIG_ZRAM=y
 CONFIG_ZRAM_DEF_COMP_ZSTD=y
-CONFIG_RCU_NOCB_CPU=y
-CONFIG_RCU_NOCB_CPU_ALL=y
 EOF
 
-# =========================================================
-# 3. 注入 SMP 亲和性重构脚本 (核心 DIY2 逻辑)
-# =========================================================
+# 3. 注入 smp_optimize：回归“双核均衡”策略
 mkdir -p package/base-files/files/etc/init.d
 cat > package/base-files/files/etc/init.d/smp_optimize <<EOF
 #!/bin/sh /etc/rc.common
 START=99
 
 boot() {
-    # 强制开启高性能调度
-    echo "performance" > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor 2>/dev/null
+    # 锁定双核性能模式
+    for i in 0 1; do echo "performance" > /sys/devices/system/cpu/cpu\\\$i/cpufreq/scaling_governor; done
 
-    # 识别 IRQ
-    ETH_IRQ=\$(grep "mtk-network" /proc/interrupts | cut -d: -f1 | tr -d ' ')
-    WED_IRQ=\$(grep "mtk_wed" /proc/interrupts | cut -d: -f1 | tr -d ' ')
-    CRYPTO_IRQ=\$(grep "safexcel" /proc/interrupts | awk -F: '{print \$1}' | tr -d ' ')
+    # 寻找经脉：自动匹配 15100000.ethernet (网络) 和 10320000.crypto (加密)
+    ETH_IRQ=\\\$(grep "15100000.ethernet" /proc/interrupts | awk -F: '{print \\\$1}' | tr -d ' ' | head -n1)
+    CRYPTO_IRQ=\\\$(grep "10320000.crypto" /proc/interrupts | awk -F: '{print \\\$1}' | tr -d ' ')
 
-    # Core 0 (Mask 1): 基础网络中断与 WED
-    for irq in \$ETH_IRQ \$WED_IRQ; do
-        echo "1" > "/proc/irq/\$irq/smp_affinity"
-    done
+    # [核心修正：全员皆兵策略]
+    # 中断处理（硬中断）仍然可以稍微偏向 Core 0，但 Mask 设为 3 (双核参与)
+    [ -n "\\\$ETH_IRQ" ] && echo "3" > "/proc/irq/\\\$ETH_IRQ/smp_affinity"
+    for irq in \\\$CRYPTO_IRQ; do echo "3" > "/proc/irq/\\\$irq/smp_affinity"; done
 
-    # Core 1 (Mask 2): 加解密引擎
-    for irq in \$CRYPTO_IRQ; do
-        echo "2" > "/proc/irq/\$irq/smp_affinity"
-    done
-
-    # RPS 软跟随：网卡收包 Core 0 -> 协议栈处理 Core 1
-    for x in /sys/class/net/eth*/queues/rx-*/rps_cpus; do echo "2" > "\$x"; done
+    # [RPS 核心合闸：全核心处理协议栈]
+    # 撤销硬隔离，让流量在双核间自由流动 (Mask 3)
+    for x in /sys/class/net/eth*/queues/rx-*/rps_cpus; do echo "3" > "\\\$x"; done
+    for x in /sys/class/net/eth*/queues/tx-*/xps_cpus; do echo "3" > "\\\$x"; done
     
-    # 提升内核 RFS 预算对位 2.5G 暴量
+    # 极大化 RFS 预算，防止大流量下的套接字冲突
     echo "32768" > /proc/sys/net/core/rps_sock_flow_entries
-    for x in /sys/class/net/eth*/queues/rx-*/rps_flow_cnt; do echo "4096" > "\$x"; done
+    for x in /sys/class/net/eth*/queues/rx-*/rps_flow_cnt; do echo "4096" > "\\\$x"; done
 
-    # PPE 硬件全开
+    # [PPE 卸载逻辑：真正的降压药]
+    # 强制将流量引流至硬件 PPE，绕过 CPU 协议栈
     echo 1 > /sys/kernel/debug/hnat/all_external 2>/dev/null
     echo 1 > /sys/kernel/debug/hnat/all_internal 2>/dev/null
 }
@@ -180,14 +179,8 @@ sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7981-SMP-T
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
 chmod +x package/base-files/files/etc/init.d/smp_optimize
-# 物理合闸：加入开机自启
+# a.物理合闸：加入开机自启
 ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99smp_optimize
-
-# 1. 物理主权：MT7981 1.6GHz 频率释放 ---
-
-# a. 修改设备树，将默认频率改为 1.65G (1650MHz)
-# 针对大部分 MT7981 源码结构，直接替换频率定义
-find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1650000/g' 2>/dev/null
 
 # b. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
