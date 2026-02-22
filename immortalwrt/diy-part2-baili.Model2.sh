@@ -188,9 +188,9 @@ chmod +x package/base-files/files/etc/init.d/matrix_optimize
 sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7981-SMP-Turbo-v1.0'/g" package/base-files/files/etc/openwrt_release
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
-chmod +x package/base-files/files/etc/init.d/rps_optimize
+chmod +x package/base-files/files/etc/init.d/matrix_optimize
 # 物理合闸：加入开机自启
-ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99rps_optimize
+ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99matrix_optimize
 
 # a. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
@@ -224,8 +224,7 @@ modprobe crypto_safexcel 2>/dev/null' package/base-files/files/etc/rc.local
 # A. 物理层定调：锁定 2.2GHz 巅峰主频 (MT7986 专用)
 # =========================================================
 # 警告：2.2GHz 属于极限超频，请确保散热环境与风扇冷疗已就位
-find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/2200000/g' 2>/dev/null
-find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1600000/2200000/g' 2>/dev/null
+find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/2000000/2200000/g' 2>/dev/null
 
 # B. 物理级性能解锁 (通用) ---
 # 开启内核 RCU 卸载，减少系统琐事对高频核心的打扰
