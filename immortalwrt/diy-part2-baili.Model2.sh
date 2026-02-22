@@ -177,14 +177,32 @@ EOF
 chmod +x package/base-files/files/etc/init.d/smp_optimize
 
 # =========================================================
-# 4. 编译资产收束
+# 4. 资产收束与双保险 (MT7986 终极加固版)
 # =========================================================
-sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7981-SMP-Turbo-v1.0'/g" package/base-files/files/etc/openwrt_release
+
+# 确保目录必须存在
+mkdir -p package/base-files/files/etc/init.d
+mkdir -p package/base-files/files/etc/uci-defaults
+
+# 1. 赋予 smp_optimize 脚本执行权限 (这是前提)
+chmod +x package/base-files/files/etc/init.d/smp_optimize
+
+# 2. 写入双保险自启动逻辑
+cat > package/base-files/files/etc/uci-defaults/99-smp-config <<EOF
+#!/bin/sh
+# 这一步会自动补全 /etc/rc.d/S99smp_optimize 链接
+/etc/init.d/smp_optimize enable
+# 这一步立刻执行调频、PPE 开启和四核均衡策略
+/etc/init.d/smp_optimize start
+exit 0
+EOF
+
+# 3. 更新版本描述
+sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7986-2.2G-Balance-v4.0'/g" package/base-files/files/etc/openwrt_release
+
+# 4. 最后进行 feeds 更新和配置生成
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
-chmod +x package/base-files/files/etc/init.d/smp_optimize
-# A.物理合闸：加入开机自启
-ln -sf ../init.d/rps_optimize package/base-files/files/etc/rc.d/S99smp_optimize
 
 # a. 强制开启内核的 CPU 频率调节器并锁定高性能模式
 echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
