@@ -100,26 +100,73 @@ jobs:
 
     - name: Precise Download SmartCore (AI-Driven) for MT798x
       run: |
-        SMARTCORE_RAW_URL="https://raw.githubusercontent.com/vernesong/OpenClash/core/master/smart/clash-linux-arm64.tar.gz"
-        CORE_DIR="openwrt/files/etc/openclash/core"
-        ROOT_DIR=$(pwd)
-        FULL_CORE_DIR="$ROOT_DIR/$CORE_DIR"
-        FULL_TARGET_FILE="$FULL_CORE_DIR/clash_meta"
+       # ==================== 路径与变量配置 ====================
+       # 使用 OpenClash 官方仓库的 SmartCore (ARM64)
+       SMARTCORE_URL="https://raw.githubusercontent.com/vernesong/OpenClash/core/master/smart/clash-linux-arm64.tar.gz"
 
-        echo "🎯 正在从 OpenClash 核心仓库提取 SmartCore..."
-        mkdir -p "$FULL_CORE_DIR" || exit 1
-        wget -O /tmp/smartcore.tar.gz --no-check-certificate "$SMARTCORE_RAW_URL" || exit 1
-        tar -zxvf /tmp/smartcore.tar.gz -C /tmp/ || exit 1
+       # 编译机或实机路径
+       ROOT_DIR=$(pwd)
+       OC_CORE_DIR="$ROOT_DIR/openwrt/files/etc/openclash/core"
+       NIKKI_CORE_PATH="$ROOT_DIR/openwrt/files/usr/bin/mihomo" # 编译时路径
+       # 如果是在实机运行，请取消下面两行的注释：
+       # OC_CORE_DIR="/etc/openclash/core"
+       # NIKKI_CORE_PATH="/usr/bin/mihomo"
 
-        if [ -f /tmp/clash ]; then
-          mv /tmp/clash "$FULL_TARGET_FILE"
-        else
-          find /tmp -type f -name "clash*" -exec mv {} "$FULL_TARGET_FILE" \;
-        fi
+       TMP_DIR="/tmp/smartcore_update"
+       # ========================================================
 
-        chmod +x "$FULL_TARGET_FILE"
-        file "$FULL_TARGET_FILE"
-        mkdir -p "$ROOT_DIR/openwrt/files/etc/openclash/cache"
+       echo "🎯 开始 SmartCore 全量注入流程 (OpenClash + Nikki)..."
+
+       # 1. 准备环境
+       mkdir -p "$TMP_DIR"
+       mkdir -p "$OC_CORE_DIR"
+       mkdir -p "$(dirname "$NIKKI_CORE_PATH")"
+
+       # 2. 下载指定的 SmartCore
+       echo "📥 正在从 OpenClash 仓库抓取 SmartCore..."
+       wget -O "$TMP_DIR/smartcore.tar.gz" --no-check-certificate "$SMARTCORE_URL" || {
+       echo "❌ 下载失败"; exit 1;
+       }
+
+       # 3. 解压并精准提取
+       echo "📦 解压内核文件..."
+       tar -zxvf "$TMP_DIR/smartcore.tar.gz" -C "$TMP_DIR/" || {
+       echo "❌ 解压失败"; exit 1;
+       }
+
+       # 寻找解压出来的二进制文件 (通常叫 clash)
+       SOURCE_BINARY=$(find "$TMP_DIR" -type f -name "clash*" | head -n 1)
+
+       if [ -z "$SOURCE_BINARY" ]; then
+       echo "❌ 未找到解压后的二进制内核"; exit 1;
+       fi
+
+       # 4. 物理主权分发：一源多用
+       echo "🛡️ 正在注入 OpenClash (重命名为 clash_meta)..."
+       cp -f "$SOURCE_BINARY" "$OC_CORE_DIR/clash_meta"
+       chmod +x "$OC_CORE_DIR/clash_meta"
+
+       echo "🛡️ 正在注入 Nikki (替换为 mihomo)..."
+       cp -f "$SOURCE_BINARY" "$NIKKI_CORE_PATH"
+       chmod +x "$NIKKI_CORE_PATH"
+
+       # 5. 架构验证 (RAX3000M 必须是 aarch64)
+       echo "🧪 执行物理架构交叉验证..."
+       FILE_INFO=$(file "$NIKKI_CORE_PATH")
+       if echo "$FILE_INFO" | grep -q "aarch64"; then
+       echo "✅ 验证通过: 成功获取 ARM64 架构 SmartCore"
+       else
+       echo "❌ 警告: 检测到非 ARM64 架构，请检查下载链接"; exit 1
+       fi
+
+       # 6. 预置缓存空间 (为 AI 模块预留)
+       mkdir -p "$ROOT_DIR/openwrt/files/etc/openclash/cache"
+
+       # 7. 清理
+       rm -rf "$TMP_DIR"
+
+       echo "🎉 [双路合闸] SmartCore 已成功注入 OpenClash 与 Nikki。"
+       echo "🚀 物理主权已确立，准备进入编译或重启服务。"
 
     - name: 更新 feeds
       run: |
