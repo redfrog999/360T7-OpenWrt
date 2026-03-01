@@ -122,7 +122,7 @@ EOF
 # =========================================================
 # 1. 物理层定调：锁定 2.2GHz (四核全开，同步巅峰)
 # =========================================================
-find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/2000000/2200000/g' 2>/dev/null
+find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/2000000/2250000/g' 2>/dev/null
 
 # =========================================================
 # 2. 内核特性：合闸卸载引擎 (PPE + WED + ZSTD)
