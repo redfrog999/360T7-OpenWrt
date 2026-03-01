@@ -2,7 +2,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: openWrt Redmi AX6000-35-24.10-6.6-Newtest
+name: OpenWrt Redmi AX6000-35-24.10-6.6-Newtest
 
 on:
   repository_dispatch:
