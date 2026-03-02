@@ -16,10 +16,10 @@ rm -rf package/passwall-packages
 rm -rf feeds/luci/themes/luci-theme-argon
 # git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
 git clone --depth 1 -b openwrt-24.10 https://github.com/sbwml/luci-theme-argon package/luci-theme-argon
-# git clone --depth=1 -b master https://github.com/sirpdboy/luci-theme-kucat package/luci-theme-kucat
-git clone --depth=1 -b master https://github.com/NicolasMe9907/luci-theme-kucat package/luci-theme-kucat
-# git clone --depth=1 -b master https://github.com/sirpdboy/luci-app-kucat-config package/luci-app-kucat-config
-git clone --depth=1 -b main https://github.com/NicolasMe9907/luci-app-advancedplus  package/luci-app-advancedplus
+git clone --depth=1 -b master https://github.com/sirpdboy/luci-theme-kucat package/luci-theme-kucat
+# git clone --depth=1 -b master https://github.com/NicolasMe9907/luci-theme-kucat package/luci-theme-kucat
+ git clone --depth=1 -b master https://github.com/sirpdboy/luci-app-kucat-config package/luci-app-kucat-config
+# git clone --depth=1 -b main https://github.com/NicolasMe9907/luci-app-advancedplus  package/luci-app-advancedplus
 git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora package/luci-theme-aurora
 echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config
 
