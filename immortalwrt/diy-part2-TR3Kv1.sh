@@ -29,7 +29,7 @@ find package/luci-theme-*/* -type f -print | grep '/root/etc/uci-defaults/' | wh
 done
 
 # 设置默认主题
-default_theme='kucat'
+default_theme='aurora'
 sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/config/luci
 
 # 強制給予 uci-defaults 腳本執行權限，防止雲端編譯權限丟失
