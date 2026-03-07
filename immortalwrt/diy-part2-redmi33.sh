@@ -243,6 +243,31 @@ sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
 # D.拷贝自定义 DIY 目录 (如果存在)
 [ -d "${GITHUB_WORKSPACE}/immortalwrt/diy" ] && cp -Rf ${GITHUB_WORKSPACE}/immortalwrt/diy/* .
 
+# ---------------------------------------------------------
+# 5.MT7986 4C + 2G RAM 专属 CAKE-MQ 优化脚本
+# 作用：接管 mq/fq_codel，实现加密流的确定性延迟
+# ---------------------------------------------------------
+
+# 1. 确保物理接口 eth0 (WAN) 干净
+tc qdisc del dev eth0 root 2>/dev/null
+
+# 2. 注入 CAKE 调度器
+# bandwidth: 请根据你中继环境的真实带宽调整（如 100mbit 代表 12.5MB/s）
+# triple-isolate: 配合 4C 架构，实现源/目/流的三重隔离，防止一核有难三核围观
+# wash: 配合闭源驱动，清除可能影响 CPU 处理的 Metadata 标签
+# ack-filter: 极度重要！减少中继链路中 ACK 包对带宽的无效占用
+tc qdisc add dev eth0 root cake \
+    bandwidth 100mbit \
+    triple-isolate \
+    wash \
+    ack-filter \
+    rtt 100ms \
+    memlimit 32M
+
+# 3. (可选) 针对 2G 大内存的内核缓冲区溢出保护
+sysctl -w net.core.rmem_max=16777216
+sysctl -w net.core.wmem_max=16777216
+
 # 最后的逻辑收束
 
 # 确保硬件加速模块入库
