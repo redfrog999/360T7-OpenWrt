@@ -265,6 +265,39 @@ sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
 # D.拷贝自定义 DIY 目录 (如果存在)
 [ -d "${GITHUB_WORKSPACE}/immortalwrt/diy" ] && cp -Rf ${GITHUB_WORKSPACE}/immortalwrt/diy/* .
 
+# --- 360T7 中继自愈逻辑 Start ---
+cat << 'EOF' > /usr/bin/relay_guard.sh
+#!/bin/sh
+# 自动检测中继接口（适配 apcli0 或 wwan0）
+IFACE=$(iw dev | grep -E "apclix0|wwan0" | awk '{print $2}' | head -n 1)
+[ -z "$IFACE" ] && exit 0
+
+while true; do
+    # 1. 检查物理链路状态
+    LINK_OK=$(iw dev $IFACE link | grep -i "Connected")
+    
+    # 2. 如果链路还在，但 DHCP 拿不到或网关不通（触发自愈）
+    GATEWAY=$(ip route | grep default | grep $IFACE | awk '{print $3}')
+    if [ -n "$LINK_OK" ]; then
+        if ! ping -c 1 -W 2 $GATEWAY > /dev/null 2>&1; then
+            # 此时可能发生了信道拥塞或逻辑掉线
+            # 执行被动扫描：强制驱动刷新基站 BSSID 信息，但不主动发包干扰
+            iw dev $IFACE scan passive > /dev/null 2>&1
+            
+            # 强制触发 DHCP 发现，挽救即将丢失的租约
+            killall -SIGUSR1 udhcpc 2>/dev/null
+            sleep 5
+        fi
+    fi
+    # 绝大部分时间处于休眠，每 45 秒检测一次，确保 15MB/s 加密流的极致延迟
+    sleep 45
+done
+EOF
+
+chmod +x /usr/bin/relay_guard.sh
+/usr/bin/relay_guard.sh &
+# --- 360T7 中继自愈逻辑 End ---
+
 # 最后的逻辑收束
 
 # 确保硬件加速模块入库
