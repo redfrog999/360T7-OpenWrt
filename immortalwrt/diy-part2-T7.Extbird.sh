@@ -33,6 +33,7 @@ default_theme='bootstrap'
 sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/config/luci
 
 # 強制給予 uci-defaults 腳本執行權限，防止雲端編譯權限丟失
+# chmod +x files/etc/uci-defaults/99_physical_sovereignty
 chmod +x files/etc/uci-defaults/99_physical_sovereignty
 
 # 防火墙4添加自定义nft命令支持
