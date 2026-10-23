@@ -101,6 +101,16 @@ rm -rf feeds/luci/applications/{luci-app-passwall,luci-app-ssr-libev-server}
 git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
 # ------------------------------------------------------------
 
+# SmartDNS
+rm -rf feeds/luci/applications/luci-app-smartdns
+git clone https://github.com/lwb1978/luci-app-smartdns package/luci-app-smartdns
+# 替换immortalwrt 软件仓库smartdns版本为官方最新版
+rm -rf feeds/packages/net/smartdns
+# git clone https://github.com/lwb1978/openwrt-smartdns package/smartdns
+cp -rf ${GITHUB_WORKSPACE}/patch/smartdns feeds/packages/net
+# 添加 smartdns-ui
+# echo "CONFIG_PACKAGE_smartdns-ui=y" >> .config
+
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
 # 唤醒 SafeXcel 硬件引擎编译参数
