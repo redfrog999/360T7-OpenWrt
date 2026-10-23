@@ -93,13 +93,15 @@ popd
 
 # --- 2. 插件与核心物料注入 (逻辑对齐) ---
 
-# 克隆 Nikki (基于 Mihomo)
-rm -rf feeds/luci/applications/luci-app-nikki
-git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
-
-# 克隆最新版 OpenClash 并强制对齐 dnsmasq-full
-find ./ -name "luci-app-openclash" -type d -exec rm -rf {} +
-git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package/luci-app-openclash
+# SmartDNS
+rm -rf feeds/luci/applications/luci-app-smartdns
+git clone https://github.com/lwb1978/luci-app-smartdns package/luci-app-smartdns
+# 替换immortalwrt 软件仓库smartdns版本为官方最新版
+rm -rf feeds/packages/net/smartdns
+# git clone https://github.com/lwb1978/openwrt-smartdns package/smartdns
+cp -rf ${GITHUB_WORKSPACE}/patch/smartdns feeds/packages/net
+# 添加 smartdns-ui
+# echo "CONFIG_PACKAGE_smartdns-ui=y" >> .config
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
