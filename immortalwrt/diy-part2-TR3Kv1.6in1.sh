@@ -1,16 +1,8 @@
 #!/bin/bash
 
-echo "开始执行【万里版】逻辑对齐重构脚本……"
-echo "========================="
-
 # --- 0. 基础环境清理与物理去瘀 ---
 # 修改默认IP
 sed -i 's/192.168.6.1/192.168.15.1/g' package/base-files/files/bin/config_generate
-
-# 彻底清理 PassWall、老旧 OpenClash 和残留核心库 (防止逻辑冲突)
-rm -rf feeds/packages/net/{xray*,v2ray*,sing-box,hysteria*,shadowsocks*,trojan*,clash*}
-rm -rf feeds/luci/applications/luci-app-passwall
-rm -rf package/passwall-packages
 
 # --- 1. 添加主题及筑底构建
 rm -rf feeds/luci/themes/luci-theme-argon
@@ -73,9 +65,9 @@ cat >> "feeds/luci/applications/luci-app-firewall/po/zh_Hans/firewall.po" <<-EOF
 	msgstr "IPtables 防火墙"
 EOF
 
-# 启用Golang 1.26编译
+# 启用Golang 1.27编译
 rm -rf feeds/packages/lang/golang
-git clone --depth=1 https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
+git clone --depth=1 https://github.com/sbwml/packages_lang_golang -b 27.x feeds/packages/lang/golang
 
 # TTYD设置
 sed -i 's/procd_set_param stdout 1/procd_set_param stdout 0/g' feeds/packages/utils/ttyd/files/ttyd.init
@@ -99,14 +91,6 @@ popd
 # 唤醒 SafeXcel 硬件引擎编译参数
 sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' include/target.mk
 sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
-
-# 锁定高性能模式与硬解模块默认加载
-cat >> .config <<EOF
-CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y
-CONFIG_PACKAGE_kmod-crypto-aes=y
-CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
-CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
-EOF
 
 # --- 4. 系统内核优化 (全量对齐) ---
 
@@ -188,16 +172,6 @@ ln -sf ../init.d/smp_optimize package/base-files/files/etc/rc.d/S99smp_optimize
 
 echo "✅ 资产收束完成：S99smp_optimize 已成功对位，无报错隐患。"
 
-# 1. 物理主权：MT7981 1.6GHz 频率释放 ---
-
-# a. 修改设备树，将默认频率改为 1.65G (1650MHz)
-# 针对大部分 MT7981 源码结构，直接替换频率定义
-find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1650000/g' 2>/dev/null
-
-# b. 强制开启内核的 CPU 频率调节器并锁定高性能模式
-echo "CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y" >> .config
-echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> .config
-
 # c.统一注入 sysctl 参数 (BBR + 调度优化)
 cat >> package/base-files/files/etc/sysctl.conf <<EOF
 net.core.default_qdisc=fq
@@ -214,64 +188,6 @@ kernel.sched_min_granularity_ns=1000000
 kernel.sched_wakeup_granularity_ns=1500000
 net.core.netdev_budget=1000
 net.core.netdev_budget_usecs=10000
-EOF
-
-# e.物理 HNAT (PPE) 开启逻辑注入
-sed -i '/exit 0/i \
-sysctl -w net.netfilter.nf_flow_table_hw=1 \
-for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done \
-modprobe crypto_safexcel 2>/dev/null' package/base-files/files/etc/rc.local
-
-# --- 5. 分机型适配与配置固化 ---
-
-# A. 分机型精准调优逻辑 (解决 eMMC 波动与 NAND 压榨) ---
-
-if grep -iq "rax3000m-emmc\|xr30-emmc" .config; then
-    # 【eMMC 狂暴适配版】针对超频后的 I/O 瓶颈优化
-    echo "# 1.65GHz Overclocked & eMMC Balanced" >> package/base-files/files/etc/sysctl.conf
-    # 压榨 Cache 到 40 (高频 CPU 处理回收极快)，保留 B站秒开快感
-    echo "vm.vfs_cache_pressure=40" >> package/base-files/files/etc/sysctl.conf
-    # 免死金牌：预留 20MB 物理内存，确保 1.65G 下无线驱动 DMA 不断流
-    echo "vm.min_free_kbytes=20480" >> package/base-files/files/etc/sysctl.conf
-    # 缩短脏数据回写周期，防止 eMMC 瞬间 I/O 阻塞导致网速波动
-    echo "vm.dirty_expire_centisecs=1500" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.dirty_writeback_centisecs=300" >> package/base-files/files/etc/sysctl.conf
-
-elif grep -iq "360t7\|xr30-nand" .config; then
-    # 【NAND 极致压榨版】
-    echo "# 1.65GHz NAND Extreme Mode" >> package/base-files/files/etc/sysctl.conf
-    # 开启透明大页，减少超频后的 TLB 寻址开销
-    echo "kernel.mm.transparent_hugepages.enabled=always" >> package/base-files/files/etc/sysctl.conf
-    # NAND 机型内存相对宽裕，预留 16MB 即可
-    echo "vm.min_free_kbytes=16384" >> package/base-files/files/etc/sysctl.conf
-    echo "vm.swappiness=10" >> package/base-files/files/etc/sysctl.conf
-
-elif grep -iq "tr3000v1" .config; then
-    # 【TR3000v1 机皇专属】
-    echo "# TR3000v1 Export Extreme" >> package/base-files/files/etc/sysctl.conf
-    # 极致 Cache 深度，10 为极限，配合 1.6G+ 暴力主频
-    echo "vm.vfs_cache_pressure=10" >> package/base-files/files/etc/sysctl.conf
-    echo "kernel.nmi_watchdog=0" >> package/base-files/files/etc/sysctl.conf
-fi
-
-# B. 物理级性能解锁 (通用) ---
-# 开启内核 RCU 卸载，减少系统琐事对高频核心的打扰
-echo "kernel.rcu_nocb_poll=1" >> package/base-files/files/etc/sysctl.conf
-
-# C.根据 .config 自动检测并删除冗余监控插件 (清理内耗)
-sed -i 's/CONFIG_PACKAGE_luci-app-turboacc=y/CONFIG_PACKAGE_luci-app-turboacc=n/g' .config
-sed -i 's/CONFIG_PACKAGE_wrtbwmon=y/CONFIG_PACKAGE_wrtbwmon=n/g' .config
-
-# D.拷贝自定义 DIY 目录 (如果存在)
-[ -d "${GITHUB_WORKSPACE}/immortalwrt/diy" ] && cp -Rf ${GITHUB_WORKSPACE}/immortalwrt/diy/* .
-
-# 最后的逻辑收束
-
-# 确保硬件加速模块入库
-cat >> .config <<EOF
-CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y
-CONFIG_PACKAGE_kmod-crypto-aes=y
-CONFIG_PACKAGE_kmod-mtk-eth-hw-offload=y
 EOF
 
 ./scripts/feeds update -a && ./scripts/feeds install -a
