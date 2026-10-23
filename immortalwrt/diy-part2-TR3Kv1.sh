@@ -26,7 +26,6 @@ sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/conf
 
 # 強制給予 uci-defaults 腳本執行權限，防止雲端編譯權限丟失
 chmod +x files/etc/uci-defaults/99_physical_sovereignty
-# chmod +x files/etc/uci-defaults/99_15_physical_sovereignty
 
 # 防火墙4添加自定义nft命令支持
 # curl -s https://$mirror/openwrt/patch/firewall4/100-openwrt-firewall4-add-custom-nft-command-support.patch | patch -p1
@@ -102,12 +101,6 @@ find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*
 # 2. 内核重装备：强制开启所有硬件卸载特性
 KERNEL_CONF="target/linux/mediatek/filogic/config-6.6"
 cat >> $KERNEL_CONF <<EOF
-# [MTK 物理卸载合闸]
-CONFIG_NET_MEDIATEK_SOC_WED=y
-CONFIG_NET_MEDIATEK_SOC_PPE=y
-# [eBPF 与 XDP 分流器]
-CONFIG_BPF_JIT=y
-CONFIG_XDP_SOCKETS=y
 # [ZRAM 动态内存]
 CONFIG_ZRAM=y
 CONFIG_ZRAM_DEF_COMP_ZSTD=y
