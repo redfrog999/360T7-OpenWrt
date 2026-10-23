@@ -93,13 +93,18 @@ popd
 
 # --- 2. 插件与核心物料注入 (逻辑对齐) ---
 
-# 克隆 Nikki (基于 Mihomo)
-rm -rf feeds/luci/applications/luci-app-nikki
-git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
-
-# 克隆最新版 OpenClash 并强制对齐 dnsmasq-full
-find ./ -name "luci-app-openclash" -type d -exec rm -rf {} +
-git clone --depth 1 -b master https://github.com/vernesong/OpenClash.git package/luci-app-openclash
+# ------------------PassWall 科学上网--------------------------
+# 移除 openwrt feeds 自带的核心库
+rm -rf feeds/packages/net/{xray-core,v2ray-core,v2ray-geodata,sing-box,pdnsd-alt,chinadns-ng,dns2socks,dns2tcp,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview}
+# 核心库
+git clone https://github.com/Openwrt-Passwall/openwrt-passwall-packages package/passwall-packages
+rm -rf package/passwall-packages/{shadowsocks-rust,v2ray-geodata}
+merge_package v5 https://github.com/sbwml/openwrt_helloworld package/passwall-packages shadowsocks-rust v2ray-geodata
+# app
+rm -rf feeds/luci/applications/{luci-app-passwall,luci-app-ssr-libev-server}
+# git clone https://github.com/lwb1978/openwrt-passwall package/passwall-luci
+git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
+# ------------------------------------------------------------
 
 # --- 3. 硬件性能加速与指令集对齐 (SafeXcel & A53) ---
 
