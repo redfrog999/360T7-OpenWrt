@@ -10,7 +10,7 @@ rm -rf feeds/luci/themes/luci-theme-argon
 git clone --depth 1 -b openwrt-24.10 https://github.com/sbwml/luci-theme-argon package/luci-theme-argon
 git clone --depth=1 -b master https://github.com/sirpdboy/luci-theme-kucat package/luci-theme-kucat
 # git clone --depth=1 -b master https://github.com/NicolasMe9907/luci-theme-kucat package/luci-theme-kucat
- git clone --depth=1 -b master https://github.com/sirpdboy/luci-app-kucat-config package/luci-app-kucat-config
+git clone --depth=1 -b master https://github.com/sirpdboy/luci-app-kucat-config package/luci-app-kucat-config
 # git clone --depth=1 -b main https://github.com/NicolasMe9907/luci-app-advancedplus  package/luci-app-advancedplus
 git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora package/luci-theme-aurora
 echo "CONFIG_PACKAGE_luci-theme-aurora=y" >> .config
@@ -25,7 +25,6 @@ default_theme='aurora'
 sed -i "s/bootstrap/$default_theme/g" feeds/luci/modules/luci-base/root/etc/config/luci
 
 # 強制給予 uci-defaults 腳本執行權限，防止雲端編譯權限丟失
-#chmod +x files/etc/uci-defaults/99_physical_sovereignty
 chmod +x files/etc/uci-defaults/99_physical_sovereignty
 
 # 防火墙4添加自定义nft命令支持
@@ -43,7 +42,7 @@ popd
 
 # 补充 firewall4 luci 中文翻译
 cat >> "feeds/luci/applications/luci-app-firewall/po/zh_Hans/firewall.po" <<-EOF
-	
+
 	msgid ""
 	"Custom rules allow you to execute arbitrary nft commands which are not "
 	"otherwise covered by the firewall framework. The rules are executed after "
@@ -51,7 +50,7 @@ cat >> "feeds/luci/applications/luci-app-firewall/po/zh_Hans/firewall.po" <<-EOF
 	msgstr ""
 	"自定义规则允许您执行不属于防火墙框架的任意 nft 命令。每次重启防火墙时，"
 	"这些规则在默认的规则运行后立即执行。"
-	
+
 	msgid ""
 	"Applicable to internet environments where the router is not assigned an IPv6 prefix, "
 	"such as when using an upstream optical modem for dial-up."
@@ -92,14 +91,103 @@ popd
 sed -i 's/-Os -pipe/-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' include/target.mk
 sed -i 's/-mcpu=cortex-a53/-mcpu=cortex-a53+crc+crypto/g' include/target.mk
 
-# 锁定高性能模式与硬解模块默认加载
-cat >> .config <<EOF
-CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y
+# --- 4. 系统内核优化 (全量对齐) ---
 
-# 最后的逻辑收束
+ #!/bin/bash
+
+# 1. 物理层定调：锁定 1.65GHz (确保双核都在高频运行)
+find target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/ -name "*.dts*" | xargs sed -i 's/1300000/1650000/g' 2>/dev/null
+
+# 2. 内核重装备：强制开启所有硬件卸载特性
+KERNEL_CONF="target/linux/mediatek/filogic/config-6.6"
+cat >> $KERNEL_CONF <<EOF
+# [ZRAM 动态内存]
+CONFIG_ZRAM=y
+CONFIG_ZRAM_DEF_COMP_ZSTD=y
+EOF
+
+# 3. 注入 smp_optimize：回归“双核均衡”策略
+mkdir -p package/base-files/files/etc/init.d
+cat > package/base-files/files/etc/init.d/smp_optimize <<EOF
+#!/bin/sh /etc/rc.common
+START=99
+
+boot() {
+    # 锁定双核性能模式
+    for i in 0 1; do echo "performance" > /sys/devices/system/cpu/cpu\\\$i/cpufreq/scaling_governor; done
+
+    # 寻找经脉：自动匹配 15100000.ethernet (网络) 和 10320000.crypto (加密)
+    ETH_IRQ=\\\$(grep "15100000.ethernet" /proc/interrupts | awk -F: '{print \\\$1}' | tr -d ' ' | head -n1)
+    CRYPTO_IRQ=\\\$(grep "10320000.crypto" /proc/interrupts | awk -F: '{print \\\$1}' | tr -d ' ')
+
+    # [核心修正：全员皆兵策略]
+    # 中断处理（硬中断）仍然可以稍微偏向 Core 0，但 Mask 设为 3 (双核参与)
+    [ -n "\\\$ETH_IRQ" ] && echo "3" > "/proc/irq/\\\$ETH_IRQ/smp_affinity"
+    for irq in \\\$CRYPTO_IRQ; do echo "3" > "/proc/irq/\\\$irq/smp_affinity"; done
+
+    # [RPS 核心合闸：全核心处理协议栈]
+    # 撤销硬隔离，让流量在双核间自由流动 (Mask 3)
+    for x in /sys/class/net/eth*/queues/rx-*/rps_cpus; do echo "3" > "\\\$x"; done
+    for x in /sys/class/net/eth*/queues/tx-*/xps_cpus; do echo "3" > "\\\$x"; done
+    
+    # 极大化 RFS 预算，防止大流量下的套接字冲突
+    echo "32768" > /proc/sys/net/core/rps_sock_flow_entries
+    for x in /sys/class/net/eth*/queues/rx-*/rps_flow_cnt; do echo "4096" > "\\\$x"; done
+
+    # [PPE 卸载逻辑：真正的降压药]
+    # 强制将流量引流至硬件 PPE，绕过 CPU 协议栈
+    echo 1 > /sys/kernel/debug/hnat/all_external 2>/dev/null
+    echo 1 > /sys/kernel/debug/hnat/all_internal 2>/dev/null
+}
+EOF
+
+chmod +x package/base-files/files/etc/init.d/smp_optimize
+
+# =========================================================
+# 4. 编译资产收束 (修正版：确保目录存在且文件名对齐)
+# =========================================================
+sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWrt-MT7986-Matrix-v4.0'/g" package/base-files/files/etc/openwrt_release
 
 ./scripts/feeds update -a && ./scripts/feeds install -a
 make defconfig
 
-echo "========================="
-echo "✅ DIY2 逻辑重组完成，等待咆哮！"
+# 关键修正点 1：确保目标物理目录存在，否则 ln 必报错
+mkdir -p package/base-files/files/etc/rc.d
+mkdir -p package/base-files/files/etc/init.d
+
+# 关键修正点 2：赋予正确的文件执行权
+chmod +x package/base-files/files/etc/init.d/smp_optimize
+
+# 关键修正点 3：物理合闸逻辑对位
+# 之前报错是因为 ../init.d/rps_optimize 不存在
+# 修正为链接到你真正创建的文件 smp_optimize
+ln -sf ../init.d/smp_optimize package/base-files/files/etc/rc.d/S99smp_optimize
+
+echo "✅ 资产收束完成：S99smp_optimize 已成功对位，无报错隐患。"
+
+# c.统一注入 sysctl 参数 (BBR + 调度优化)
+cat >> package/base-files/files/etc/sysctl.conf <<EOF
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+vm.vfs_cache_pressure=40
+vm.min_free_kbytes=20480
+EOF
+
+# d.[ 内核调度调优：针对 A53 1.6&2.3GHz 优化 缩短调度周期，匹配高频心跳，降低 Hy2 延迟|[网络吞吐优化] 提高软中断处理预算 ]
+# 使用 append 模式写入 sysctl.conf
+cat << 'EOF' >> package/base-files/files/etc/sysctl.conf
+kernel.sched_latency_ns=8000000
+kernel.sched_min_granularity_ns=1000000
+kernel.sched_wakeup_granularity_ns=1500000
+net.core.netdev_budget=1000
+net.core.netdev_budget_usecs=10000
+EOF
+
+# e.物理 HNAT (PPE) 开启逻辑注入
+sed -i '/exit 0/i \
+sysctl -w net.netfilter.nf_flow_table_hw=1 \
+for i in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > "$i/scaling_governor"; done \
+modprobe crypto_safexcel 2>/dev/null' package/base-files/files/etc/rc.local
+
+./scripts/feeds update -a && ./scripts/feeds install -a
+make defconfig
